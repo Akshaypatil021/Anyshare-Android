@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginStart="16dp"
+    android:layout_marginTop="6dp"
+    android:layout_marginEnd="16dp"
+    android:layout_marginBottom="4dp"
+    app:cardCornerRadius="14dp"
+    app:cardElevation="1dp"
+    app:strokeWidth="1dp"
+    app:strokeColor="#CBD5E1">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:padding="12dp">
+
+        <TextView
+            android:id="@+id/tvSelectedIcon"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="#EEF2FF"
+            android:gravity="center"
+            android:text="📄"
+            android:textSize="20sp" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tvSelectedFileName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ellipsize="middle"
+                android:singleLine="true"
+                android:text="vacation_clip.mp4"
+                android:textColor="?android:textColorPrimary"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvSelectedFileSize"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="145.2 MB"
+                android:textColor="?android:textColorSecondary"
+                android:textSize="12sp" />
+        </LinearLayout>
+
+        <ImageButton
+            android:id="@+id/btnRemoveFile"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Remove file"
+            android:src="@android:drawable/ic_menu_close_clear_cancel"
+            app:tint="@color/error" />
+
+    </LinearLayout>
+
+</com.google.android.material.card.MaterialCardView>

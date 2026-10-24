@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+
+    <!-- Modern Anyshare Brand Palette -->
+    <color name="primary">#4F46E5</color>
+    <color name="primary_variant">#4338CA</color>
+    <color name="on_primary">#FFFFFF</color>
+
+    <color name="secondary">#06B6D4</color>
+    <color name="secondary_variant">#0891B2</color>
+    <color name="on_secondary">#FFFFFF</color>
+
+    <color name="accent_send">#6366F1</color>
+    <color name="accent_receive">#10B981</color>
+
+    <color name="surface_dark">#0F172A</color>
+    <color name="surface_card_dark">#1E293B</color>
+    <color name="text_primary_dark">#F8FAFC</color>
+    <color name="text_secondary_dark">#94A3B8</color>
+
+    <color name="surface_light">#F8FAFC</color>
+    <color name="surface_card_light">#FFFFFF</color>
+    <color name="text_primary_light">#0F172A</color>
+    <color name="text_secondary_light">#64748B</color>
+
+    <color name="success">#22C55E</color>
+    <color name="warning">#F59E0B</color>
+    <color name="error">#EF4444</color>
+
+    <!-- Adaptive Home Screen Tokens for Light Theme -->
+    <color name="home_bg">#F7FAF8</color>
+    <color name="home_text_title">#191C1B</color>
+    <color name="home_text_sub">#404946</color>
+    <color name="home_top_icon_tint">#191C1B</color>
+    <color name="home_nav_bg">#EDF4F1</color>
+    <color name="home_nav_pill">#CCE8E3</color>
+    <color name="home_nav_active">#00201C</color>
+    <color name="home_nav_inactive">#5A6461</color>
+
+    <!-- History Action Tokens -->
+    <color name="color_history_action_bg">#E2E8F0</color>
+    <color name="color_history_action_text">#1E293B</color>
+    <color name="color_history_action_icon">#475569</color>
+
+    <!-- Send Screen Category & Nearby Tokens (Light) -->
+    <color name="color_selection_card_bg">#EDF2F7</color>
+    <color name="color_selection_card_text">#1E293B</color>
+    <color name="color_nearby_container_bg">#F8FAFC</color>
+
+    <!-- Settings Screen Tokens (Light) -->
+    <color name="color_settings_pill_bg">#E2E8F0</color>
+    <color name="color_settings_pill_text">#1E293B</color>
+</resources>

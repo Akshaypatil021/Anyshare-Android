@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:padding="12dp"
+    android:layout_marginBottom="8dp"
+    android:background="@drawable/bg_selection_card"
+    android:clickable="true"
+    android:focusable="true">
+
+    <ImageView
+        android:layout_width="28dp"
+        android:layout_height="28dp"
+        android:src="@drawable/ic_device_phone"
+        app:tint="@color/accent_receive"
+        android:contentDescription="Phone icon" />
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:layout_marginStart="12dp"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/tvPeerName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Nearby Phone"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:textColor="?android:textColorPrimary" />
+
+        <TextView
+            android:id="@+id/tvPeerStatus"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:text="Wi-Fi Direct • Tap to send"
+            android:textSize="12sp"
+            android:textColor="?android:textColorSecondary" />
+    </LinearLayout>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnConnectPeer"
+        android:layout_width="wrap_content"
+        android:layout_height="36dp"
+        android:text="Send"
+        android:textSize="12sp"
+        android:textStyle="bold"
+        android:textAllCaps="false"
+        app:cornerRadius="18dp"
+        app:backgroundTint="@color/accent_send" />
+</LinearLayout>

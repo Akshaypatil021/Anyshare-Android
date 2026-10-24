@@ -1,0 +1,581 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/settingsRoot"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/home_bg">
+
+    <!-- Top Header: Title "Settings" -->
+    <TextView
+        android:id="@+id/tvSettingsTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="Settings"
+        android:textColor="?android:textColorPrimary"
+        android:textSize="22sp"
+        android:textStyle="bold"
+        android:fontFamily="sans-serif-medium"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- Main Scrollable Content -->
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/scrollSettingsContent"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginTop="12dp"
+        android:clipToPadding="false"
+        android:paddingHorizontal="20dp"
+        android:paddingBottom="24dp"
+        app:layout_constraintBottom_toTopOf="@id/bottomNavigation"
+        app:layout_constraintTop_toBottomOf="@id/tvSettingsTitle">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- ================= SECTION 1: GENERAL ================= -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:layout_marginBottom="16dp"
+                android:text="General"
+                android:textColor="?android:textColorPrimary"
+                android:textSize="17sp"
+                android:textStyle="bold"
+                android:fontFamily="sans-serif-medium" />
+
+            <!-- Row 1: Theme -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="14dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Theme"
+                    android:textColor="?android:textColorPrimary"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <LinearLayout
+                    android:id="@+id/btnTheme"
+                    android:layout_width="128dp"
+                    android:layout_height="44dp"
+                    android:background="@drawable/bg_settings_pill"
+                    android:gravity="center"
+                    android:orientation="horizontal"
+                    android:paddingHorizontal="12dp"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <TextView
+                        android:id="@+id/tvThemeValue"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:text="System"
+                        android:textColor="@color/color_settings_pill_text"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:src="@drawable/ic_arrow_drop_down"
+                        app:tint="@color/color_settings_pill_text"
+                        android:contentDescription="Dropdown" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- Row 2: Color (System / Accent Palette) -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="14dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Color"
+                    android:textColor="?android:textColorPrimary"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <LinearLayout
+                    android:id="@+id/btnColor"
+                    android:layout_width="128dp"
+                    android:layout_height="44dp"
+                    android:background="@drawable/bg_settings_pill"
+                    android:gravity="center"
+                    android:orientation="horizontal"
+                    android:paddingHorizontal="12dp"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <TextView
+                        android:id="@+id/tvColorValue"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:text="System"
+                        android:textColor="@color/color_settings_pill_text"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:src="@drawable/ic_arrow_drop_down"
+                        app:tint="@color/color_settings_pill_text"
+                        android:contentDescription="Dropdown" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- Row 3: Language -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="14dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Language"
+                    android:textColor="?android:textColorPrimary"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <LinearLayout
+                    android:id="@+id/btnLanguage"
+                    android:layout_width="128dp"
+                    android:layout_height="44dp"
+                    android:background="@drawable/bg_settings_pill"
+                    android:gravity="center"
+                    android:orientation="horizontal"
+                    android:paddingHorizontal="12dp"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <TextView
+                        android:id="@+id/tvLanguageValue"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:text="System"
+                        android:textColor="@color/color_settings_pill_text"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- Row 4: Animations Toggle -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="14dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Animations"
+                    android:textColor="?android:textColorPrimary"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <FrameLayout
+                    android:layout_width="128dp"
+                    android:layout_height="44dp"
+                    android:background="@drawable/bg_settings_pill">
+
+                    <com.google.android.material.materialswitch.MaterialSwitch
+                        android:id="@+id/switchAnimations"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center" />
+                </FrameLayout>
+            </LinearLayout>
+
+            <!-- ================= SECTION 2: RECEIVE ================= -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:layout_marginBottom="16dp"
+                android:text="Receive"
+                android:textColor="?android:textColorPrimary"
+                android:textSize="17sp"
+                android:textStyle="bold"
+                android:fontFamily="sans-serif-medium" />
+
+            <!-- Row 5: Quick Save -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="14dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Quick Save"
+                    android:textColor="?android:textColorPrimary"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <FrameLayout
+                    android:layout_width="128dp"
+                    android:layout_height="44dp"
+                    android:background="@drawable/bg_settings_pill">
+
+                    <com.google.android.material.materialswitch.MaterialSwitch
+                        android:id="@+id/switchQuickSave"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center" />
+                </FrameLayout>
+            </LinearLayout>
+
+            <!-- Row 6: Quick Save for "Favourites" -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="14dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Quick Save for &quot;Favourites&quot;"
+                    android:textColor="?android:textColorPrimary"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <FrameLayout
+                    android:layout_width="128dp"
+                    android:layout_height="44dp"
+                    android:background="@drawable/bg_settings_pill">
+
+                    <com.google.android.material.materialswitch.MaterialSwitch
+                        android:id="@+id/switchQuickSaveFav"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center" />
+                </FrameLayout>
+            </LinearLayout>
+
+            <!-- Row 7: Require PIN -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="14dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Require PIN"
+                    android:textColor="?android:textColorPrimary"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <FrameLayout
+                    android:layout_width="128dp"
+                    android:layout_height="44dp"
+                    android:background="@drawable/bg_settings_pill">
+
+                    <com.google.android.material.materialswitch.MaterialSwitch
+                        android:id="@+id/switchRequirePin"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center" />
+                </FrameLayout>
+            </LinearLayout>
+
+            <!-- Row 8: Device Name (User requested to change device name here) -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="14dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Device Name"
+                    android:textColor="?android:textColorPrimary"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <LinearLayout
+                    android:id="@+id/btnDeviceName"
+                    android:layout_width="128dp"
+                    android:layout_height="44dp"
+                    android:background="@drawable/bg_settings_pill"
+                    android:gravity="center"
+                    android:orientation="horizontal"
+                    android:paddingHorizontal="8dp"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <TextView
+                        android:id="@+id/tvDeviceNameValue"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:ellipsize="end"
+                        android:gravity="center"
+                        android:maxLines="1"
+                        android:text="(Cool Pumpkin)"
+                        android:textColor="@color/color_settings_pill_text"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- Row 9: Destination Folder -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="14dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Destination"
+                    android:textColor="?android:textColorPrimary"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <LinearLayout
+                    android:id="@+id/btnDestination"
+                    android:layout_width="128dp"
+                    android:layout_height="44dp"
+                    android:background="@drawable/bg_settings_pill"
+                    android:gravity="center"
+                    android:orientation="horizontal"
+                    android:paddingHorizontal="8dp"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <TextView
+                        android:id="@+id/tvDestinationValue"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:ellipsize="end"
+                        android:gravity="center"
+                        android:maxLines="1"
+                        android:text="(Downloads)"
+                        android:textColor="@color/color_settings_pill_text"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- Row 10: Save media to gallery -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="14dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Save media to gallery"
+                    android:textColor="?android:textColorPrimary"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <FrameLayout
+                    android:layout_width="128dp"
+                    android:layout_height="44dp"
+                    android:background="@drawable/bg_settings_pill">
+
+                    <com.google.android.material.materialswitch.MaterialSwitch
+                        android:id="@+id/switchSaveMedia"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center" />
+                </FrameLayout>
+            </LinearLayout>
+
+            <!-- Row 11: Auto Finish -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="14dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Auto Finish"
+                    android:textColor="?android:textColorPrimary"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <FrameLayout
+                    android:layout_width="128dp"
+                    android:layout_height="44dp"
+                    android:background="@drawable/bg_settings_pill">
+
+                    <com.google.android.material.materialswitch.MaterialSwitch
+                        android:id="@+id/switchAutoFinish"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center" />
+                </FrameLayout>
+            </LinearLayout>
+
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+    <!-- Bottom Navigation Bar (Matching Main & Send Screens, with Settings Active) -->
+    <LinearLayout
+        android:id="@+id/bottomNavigation"
+        android:layout_width="match_parent"
+        android:layout_height="72dp"
+        android:background="@color/home_nav_bg"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:baselineAligned="false"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <!-- Receive Tab -->
+        <LinearLayout
+            android:id="@+id/navReceive"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:background="?attr/selectableItemBackground">
+
+            <FrameLayout
+                android:layout_width="64dp"
+                android:layout_height="32dp"
+                android:background="@android:color/transparent">
+
+                <ImageView
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_receive_nav"
+                    app:tint="@color/home_nav_inactive" />
+            </FrameLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="Receive"
+                android:textSize="12sp"
+                android:textColor="@color/home_nav_inactive" />
+        </LinearLayout>
+
+        <!-- Send Tab -->
+        <LinearLayout
+            android:id="@+id/navSend"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:background="?attr/selectableItemBackground">
+
+            <FrameLayout
+                android:layout_width="64dp"
+                android:layout_height="32dp"
+                android:background="@android:color/transparent">
+
+                <ImageView
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_send_nav"
+                    app:tint="@color/home_nav_inactive" />
+            </FrameLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="Send"
+                android:textSize="12sp"
+                android:textColor="@color/home_nav_inactive" />
+        </LinearLayout>
+
+        <!-- Settings Tab (Active on Settings Screen) -->
+        <LinearLayout
+            android:id="@+id/navSettings"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:background="?attr/selectableItemBackground">
+
+            <FrameLayout
+                android:layout_width="64dp"
+                android:layout_height="32dp"
+                android:background="@drawable/bg_nav_pill_selected">
+
+                <ImageView
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_settings_nav"
+                    app:tint="@color/home_nav_active" />
+            </FrameLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="Settings"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:textColor="@color/home_nav_active" />
+        </LinearLayout>
+
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

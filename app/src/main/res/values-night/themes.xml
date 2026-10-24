@@ -1,0 +1,15 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base application theme for Dark mode. -->
+    <style name="Base.Theme.Anyshare" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/accent_send</item>
+        <item name="colorOnPrimary">@color/on_primary</item>
+        <item name="colorSecondary">@color/secondary</item>
+        <item name="colorOnSecondary">@color/on_secondary</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowBackground">@color/home_bg</item>
+        <item name="android:colorBackground">@color/home_bg</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowAnimationStyle">@style/AnyshareWindowAnimation</item>
+    </style>
+</resources>

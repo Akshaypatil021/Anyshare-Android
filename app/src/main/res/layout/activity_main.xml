@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/home_bg">
+
+    <!-- Top Action Bar (Scan QR, History, Info Icons) -->
+    <LinearLayout
+        android:id="@+id/topBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="end|center_vertical"
+        android:paddingHorizontal="20dp"
+        android:paddingTop="12dp"
+        android:paddingBottom="8dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <!-- QR Scanner Icon (Directly to the left of History) -->
+        <ImageView
+            android:id="@+id/btnScanQr"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:padding="8dp"
+            android:src="@drawable/ic_qr_scan"
+            app:tint="@color/home_top_icon_tint"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Scan QR Code" />
+
+        <!-- History Icon (Clock with counter-clockwise arrow) -->
+        <ImageView
+            android:id="@+id/btnHistory"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:layout_marginStart="8dp"
+            android:padding="8dp"
+            android:src="@drawable/ic_history"
+            app:tint="@color/home_top_icon_tint"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Transfer History" />
+
+        <!-- Info / About Icon -->
+        <ImageView
+            android:id="@+id/btnInfo"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:layout_marginStart="8dp"
+            android:padding="8dp"
+            android:src="@drawable/ic_info"
+            app:tint="@color/home_top_icon_tint"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="App Info" />
+    </LinearLayout>
+
+    <!-- Center Content: Device Avatar & Nickname & Sub-code -->
+    <LinearLayout
+        android:id="@+id/centerDeviceLayout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center_horizontal"
+        app:layout_constraintTop_toBottomOf="@id/topBar"
+        app:layout_constraintBottom_toTopOf="@id/bottomNavigation"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintVertical_bias="0.5">
+
+        <!-- Central LocalSend style Device Avatar with Rotating Outer Segmented Ring -->
+        <FrameLayout
+            android:id="@+id/avatarContainer"
+            android:layout_width="168dp"
+            android:layout_height="168dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Device Avatar">
+
+            <!-- Rotating Outer Dashed/Segmented Ring -->
+            <ImageView
+                android:id="@+id/imgAvatarOuterRing"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:src="@drawable/ic_avatar_outer_ring"
+                android:contentDescription="Rotating Radar Ring" />
+
+            <!-- Static Solid Center Circle -->
+            <ImageView
+                android:id="@+id/imgAvatarCenterCircle"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:src="@drawable/ic_avatar_center_circle"
+                android:contentDescription="Device Center Circle" />
+        </FrameLayout>
+
+        <!-- Device Name (e.g. "Cool Pumpkin") -->
+        <TextView
+            android:id="@+id/tvDeviceName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:text="Cool Pumpkin"
+            android:textSize="32sp"
+            android:textStyle="bold"
+            android:textColor="@color/home_text_title"
+            android:fontFamily="sans-serif-medium" />
+
+        <!-- Device Code / Subtitle (e.g. "#6 #2") -->
+    </LinearLayout>
+
+    <!-- Bottom Navigation Bar (Receive | Send | Settings) -->
+    <LinearLayout
+        android:id="@+id/bottomNavigation"
+        android:layout_width="match_parent"
+        android:layout_height="80dp"
+        android:orientation="horizontal"
+        android:background="@color/home_nav_bg"
+        android:paddingTop="8dp"
+        android:paddingBottom="12dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <!-- Receive Tab (Active by default) -->
+        <LinearLayout
+            android:id="@+id/navReceive"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:background="?attr/selectableItemBackground">
+
+            <FrameLayout
+                android:id="@+id/pillNavReceive"
+                android:layout_width="64dp"
+                android:layout_height="32dp"
+                android:background="@drawable/bg_nav_pill_selected">
+
+                <ImageView
+                    android:id="@+id/imgNavReceive"
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_receive_nav"
+                    app:tint="@color/home_nav_active" />
+            </FrameLayout>
+
+            <TextView
+                android:id="@+id/tvNavReceive"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="Receive"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:textColor="@color/home_nav_active" />
+        </LinearLayout>
+
+        <!-- Send Tab -->
+        <LinearLayout
+            android:id="@+id/navSend"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:background="?attr/selectableItemBackground">
+
+            <FrameLayout
+                android:id="@+id/pillNavSend"
+                android:layout_width="64dp"
+                android:layout_height="32dp"
+                android:background="@android:color/transparent">
+
+                <ImageView
+                    android:id="@+id/imgNavSend"
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_send_nav"
+                    app:tint="@color/home_nav_inactive" />
+            </FrameLayout>
+
+            <TextView
+                android:id="@+id/tvNavSend"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="Send"
+                android:textSize="12sp"
+                android:textColor="@color/home_nav_inactive" />
+        </LinearLayout>
+
+        <!-- Settings Tab -->
+        <LinearLayout
+            android:id="@+id/navSettings"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:background="?attr/selectableItemBackground">
+
+            <FrameLayout
+                android:id="@+id/pillNavSettings"
+                android:layout_width="64dp"
+                android:layout_height="32dp"
+                android:background="@android:color/transparent">
+
+                <ImageView
+                    android:id="@+id/imgNavSettings"
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_settings_nav"
+                    app:tint="@color/home_nav_inactive" />
+            </FrameLayout>
+
+            <TextView
+                android:id="@+id/tvNavSettings"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="Settings"
+                android:textSize="12sp"
+                android:textColor="@color/home_nav_inactive" />
+        </LinearLayout>
+
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

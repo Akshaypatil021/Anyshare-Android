@@ -1,0 +1,12 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="168dp"
+    android:height="168dp"
+    android:viewportWidth="120"
+    android:viewportHeight="120">
+
+    <!-- Center solid circle enlarged by 3px radius  -->
+    <path
+        android:fillColor="#006A60"
+        android:pathData="M 60,36 A 24,24 0 1,0 60,84 A 24,24 0 1,0 60,36 Z" />
+
+</vector>

@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="24dp"
+    android:gravity="center_horizontal"
+    android:background="?android:colorBackground">
+
+    <TextView
+        android:id="@+id/tvDialogTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Ready for Receiver"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:textColor="?android:textColorPrimary" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:layout_marginBottom="16dp"
+        android:text="Ask receiver to scan this QR code to connect"
+        android:textSize="13sp"
+        android:textColor="?android:textColorSecondary" />
+
+    <!-- QR Code Container Card -->
+    <com.google.android.material.card.MaterialCardView
+        android:layout_width="260dp"
+        android:layout_height="260dp"
+        app:cardCornerRadius="16dp"
+        app:cardElevation="3dp"
+        app:strokeColor="#CBD5E1"
+        app:strokeWidth="1dp"
+        app:cardBackgroundColor="#FFFFFF">
+
+        <ImageView
+            android:id="@+id/ivQrCode"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:padding="16dp"
+            android:contentDescription="Pairing QR Code" />
+
+    </com.google.android.material.card.MaterialCardView>
+
+    <!-- PIN Code & SSID Information -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:gravity="center"
+        android:orientation="horizontal">
+
+        <com.google.android.material.chip.Chip
+            android:id="@+id/chipPinCode"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="PIN: ----"
+            android:textStyle="bold"
+            app:chipBackgroundColor="#F1F5F9"
+            app:chipStrokeColor="#94A3B8"
+            app:chipStrokeWidth="1dp" />
+
+        <com.google.android.material.chip.Chip
+            android:id="@+id/chipSsid"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:text="DIRECT-Anyshare"
+            app:chipBackgroundColor="#EEF2FF"
+            app:chipStrokeColor="#818CF8"
+            app:chipStrokeWidth="1dp" />
+    </LinearLayout>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnCloseQr"
+        style="@style/Widget.Material3.Button.TextButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="Cancel &amp; Close"
+        android:textColor="@color/error" />
+
+</LinearLayout>

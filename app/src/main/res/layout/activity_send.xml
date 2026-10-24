@@ -1,0 +1,471 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/sendRoot"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?android:colorBackground"
+    tools:context=".ui.SendActivity">
+
+    <!-- Scrollable Content Area -->
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/scrollSendContent"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:fillViewport="true"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/bottomNavigation">
+
+        <LinearLayout
+            android:id="@+id/layoutMainSend"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingHorizontal="16dp"
+            android:paddingTop="16dp"
+            android:paddingBottom="24dp">
+
+            <!-- Section 1: Selection Header -->
+            <TextView
+                android:id="@+id/tvSelectionTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Selection"
+                android:textSize="22sp"
+                android:textStyle="bold"
+                android:textColor="?android:textColorPrimary"
+                android:fontFamily="sans-serif-medium" />
+
+            <!-- Selection Category Buttons: [ File | Media | Text | App ] (Folder & Paste removed) -->
+            <LinearLayout
+                android:id="@+id/gridSelection"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:orientation="horizontal">
+
+                <!-- 1. File Button -->
+                <LinearLayout
+                    android:id="@+id/btnCatFile"
+                    android:layout_width="0dp"
+                    android:layout_height="80dp"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:background="@drawable/bg_selection_card"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <ImageView
+                        android:layout_width="26dp"
+                        android:layout_height="26dp"
+                        android:src="@drawable/ic_cat_file"
+                        app:tint="@color/color_selection_card_text"
+                        android:contentDescription="File icon" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:text="File"
+                        android:textSize="13sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/color_selection_card_text" />
+                </LinearLayout>
+
+                <!-- 2. Media Button -->
+                <LinearLayout
+                    android:id="@+id/btnCatMedia"
+                    android:layout_width="0dp"
+                    android:layout_height="80dp"
+                    android:layout_weight="1"
+                    android:layout_marginStart="8dp"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:background="@drawable/bg_selection_card"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <ImageView
+                        android:layout_width="26dp"
+                        android:layout_height="26dp"
+                        android:src="@drawable/ic_cat_media"
+                        app:tint="@color/color_selection_card_text"
+                        android:contentDescription="Media icon" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:text="Media"
+                        android:textSize="13sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/color_selection_card_text" />
+                </LinearLayout>
+
+                <!-- 3. Text Button -->
+                <LinearLayout
+                    android:id="@+id/btnCatText"
+                    android:layout_width="0dp"
+                    android:layout_height="80dp"
+                    android:layout_weight="1"
+                    android:layout_marginStart="8dp"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:background="@drawable/bg_selection_card"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <ImageView
+                        android:layout_width="26dp"
+                        android:layout_height="26dp"
+                        android:src="@drawable/ic_cat_text"
+                        app:tint="@color/color_selection_card_text"
+                        android:contentDescription="Text icon" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:text="Text"
+                        android:textSize="13sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/color_selection_card_text" />
+                </LinearLayout>
+
+                <!-- 4. App Button -->
+                <LinearLayout
+                    android:id="@+id/btnCatApp"
+                    android:layout_width="0dp"
+                    android:layout_height="80dp"
+                    android:layout_weight="1"
+                    android:layout_marginStart="8dp"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:background="@drawable/bg_selection_card"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <ImageView
+                        android:layout_width="26dp"
+                        android:layout_height="26dp"
+                        android:src="@drawable/ic_cat_app"
+                        app:tint="@color/color_selection_card_text"
+                        android:contentDescription="App icon" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:text="App"
+                        android:textSize="13sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/color_selection_card_text" />
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <!-- Selected Files Status & Counter -->
+            <LinearLayout
+                android:id="@+id/layoutSelectionStatus"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingHorizontal="4dp">
+
+                <TextView
+                    android:id="@+id/tvSelectedSummary"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="0 files selected (0 B)"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    android:textColor="?android:textColorSecondary" />
+
+                <TextView
+                    android:id="@+id/btnClearSelected"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Clear All"
+                    android:textColor="@color/error"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    android:visibility="gone"
+                    tools:visibility="visible" />
+            </LinearLayout>
+
+            <!-- Compact Selected Files Chips Recycler -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recyclerSelectedFiles"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:nestedScrollingEnabled="false"
+                android:visibility="gone"
+                tools:visibility="visible" />
+
+            <!-- Section 2: Nearby Devices Header (Heart & Settings removed, QR code added) -->
+            <LinearLayout
+                android:id="@+id/headerNearbyDevices"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Nearby devices"
+                    android:textSize="22sp"
+                    android:textStyle="bold"
+                    android:textColor="?android:textColorPrimary"
+                    android:fontFamily="sans-serif-medium" />
+
+                <!-- Refresh Button (Scans for nearby devices) -->
+                <ImageView
+                    android:id="@+id/btnRefreshPeers"
+                    android:layout_width="38dp"
+                    android:layout_height="38dp"
+                    android:padding="7dp"
+                    android:src="@drawable/ic_refresh"
+                    app:tint="?android:textColorPrimary"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="Refresh Devices" />
+
+                <!-- QR Code Button (Generates Sender QR for receiver to scan) -->
+                <ImageView
+                    android:id="@+id/btnShowQrSender"
+                    android:layout_width="38dp"
+                    android:layout_height="38dp"
+                    android:layout_marginStart="8dp"
+                    android:padding="6dp"
+                    android:src="@drawable/ic_qr_code"
+                    app:tint="@color/accent_receive"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="Generate Sender QR" />
+            </LinearLayout>
+
+            <!-- Nearby Devices Container Card -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardNearbyDevices"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="0dp"
+                app:strokeWidth="1dp"
+                app:strokeColor="#25808080"
+                app:cardBackgroundColor="@color/color_nearby_container_bg">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <!-- Empty / Scanning State: matches screenshot placeholder -->
+                    <LinearLayout
+                        android:id="@+id/layoutNearbyEmpty"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:paddingVertical="8dp">
+
+                        <ImageView
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
+                            android:src="@drawable/ic_device_phone"
+                            app:tint="?android:textColorSecondary"
+                            android:contentDescription="Phone placeholder" />
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="14dp"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:id="@+id/tvNearbyStatus"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Looking for nearby devices..."
+                                android:textSize="14sp"
+                                android:textStyle="bold"
+                                android:textColor="?android:textColorPrimary" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="2dp"
+                                android:text="Make sure receiver's Wi-Fi is on, or tap QR above"
+                                android:textSize="12sp"
+                                android:textColor="?android:textColorSecondary" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <!-- Discovered Peers RecyclerView -->
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/recyclerNearbyPeers"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:nestedScrollingEnabled="false"
+                        android:visibility="gone"
+                        tools:listitem="@layout/item_nearby_peer" />
+
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Troubleshoot Link -->
+            <TextView
+                android:id="@+id/tvTroubleshoot"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="28dp"
+                android:text="Troubleshoot"
+                android:textColor="@color/accent_send"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:padding="8dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:background="?attr/selectableItemBackground" />
+
+            <!-- Helper Share Tip Text (from screenshot) -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:gravity="center"
+                android:paddingHorizontal="16dp"
+                android:text="You can also use the &quot;Share&quot; feature of your mobile device to select files more easily."
+                android:textColor="?android:textColorSecondary"
+                android:textSize="13sp" />
+
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+    <!-- Bottom Navigation Bar (Receive | Send [Active] | Settings) -->
+    <LinearLayout
+        android:id="@+id/bottomNavigation"
+        android:layout_width="match_parent"
+        android:layout_height="80dp"
+        android:orientation="horizontal"
+        android:background="@color/home_nav_bg"
+        android:paddingTop="8dp"
+        android:paddingBottom="12dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <!-- Receive Tab -->
+        <LinearLayout
+            android:id="@+id/navReceive"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:background="?attr/selectableItemBackground">
+
+            <FrameLayout
+                android:layout_width="64dp"
+                android:layout_height="32dp"
+                android:background="@android:color/transparent">
+
+                <ImageView
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_receive_nav"
+                    app:tint="@color/home_nav_inactive" />
+            </FrameLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="Receive"
+                android:textSize="12sp"
+                android:textColor="@color/home_nav_inactive" />
+        </LinearLayout>
+
+        <!-- Send Tab (Active on Send Screen) -->
+        <LinearLayout
+            android:id="@+id/navSend"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:background="?attr/selectableItemBackground">
+
+            <FrameLayout
+                android:id="@+id/pillNavSend"
+                android:layout_width="64dp"
+                android:layout_height="32dp"
+                android:background="@drawable/bg_nav_pill_selected">
+
+                <ImageView
+                    android:id="@+id/imgNavSend"
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_send_nav"
+                    app:tint="@color/home_nav_active" />
+            </FrameLayout>
+
+            <TextView
+                android:id="@+id/tvNavSend"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="Send"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:textColor="@color/home_nav_active" />
+        </LinearLayout>
+
+        <!-- Settings Tab -->
+        <LinearLayout
+            android:id="@+id/navSettings"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:background="?attr/selectableItemBackground">
+
+            <FrameLayout
+                android:layout_width="64dp"
+                android:layout_height="32dp"
+                android:background="@android:color/transparent">
+
+                <ImageView
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_settings_nav"
+                    app:tint="@color/home_nav_inactive" />
+            </FrameLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="Settings"
+                android:textSize="12sp"
+                android:textColor="@color/home_nav_inactive" />
+        </LinearLayout>
+
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

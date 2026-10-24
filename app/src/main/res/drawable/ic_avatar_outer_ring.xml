@@ -1,0 +1,64 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="168dp"
+    android:height="168dp"
+    android:viewportWidth="120"
+    android:viewportHeight="120">
+
+    <!-- 8 Outer Segmented Petals / Radar Arcs enlarged proportionally to match center circle -->
+    <!-- Segment 1: East (0 deg) -->
+    <path
+        android:strokeColor="#006A60"
+        android:strokeWidth="9.5"
+        android:strokeLineCap="round"
+        android:pathData="M 104.5,50.5 A 45.5,45.5 0 0,1 104.5,69.5" />
+
+    <!-- Segment 2: South-East (45 deg) -->
+    <path
+        android:strokeColor="#006A60"
+        android:strokeWidth="9.5"
+        android:strokeLineCap="round"
+        android:pathData="M 98.2,84.8 A 45.5,45.5 0 0,1 84.8,98.2" />
+
+    <!-- Segment 3: South (90 deg) -->
+    <path
+        android:strokeColor="#006A60"
+        android:strokeWidth="9.5"
+        android:strokeLineCap="round"
+        android:pathData="M 69.5,104.5 A 45.5,45.5 0 0,1 50.5,104.5" />
+
+    <!-- Segment 4: South-West (135 deg) -->
+    <path
+        android:strokeColor="#006A60"
+        android:strokeWidth="9.5"
+        android:strokeLineCap="round"
+        android:pathData="M 35.2,98.2 A 45.5,45.5 0 0,1 21.8,84.8" />
+
+    <!-- Segment 5: West (180 deg) -->
+    <path
+        android:strokeColor="#006A60"
+        android:strokeWidth="9.5"
+        android:strokeLineCap="round"
+        android:pathData="M 15.5,69.5 A 45.5,45.5 0 0,1 15.5,50.5" />
+
+    <!-- Segment 6: North-West (225 deg) -->
+    <path
+        android:strokeColor="#006A60"
+        android:strokeWidth="9.5"
+        android:strokeLineCap="round"
+        android:pathData="M 21.8,35.2 A 45.5,45.5 0 0,1 35.2,21.8" />
+
+    <!-- Segment 7: North (270 deg) -->
+    <path
+        android:strokeColor="#006A60"
+        android:strokeWidth="9.5"
+        android:strokeLineCap="round"
+        android:pathData="M 50.5,15.5 A 45.5,45.5 0 0,1 69.5,15.5" />
+
+    <!-- Segment 8: North-East (315 deg) -->
+    <path
+        android:strokeColor="#006A60"
+        android:strokeWidth="9.5"
+        android:strokeLineCap="round"
+        android:pathData="M 84.8,21.8 A 45.5,45.5 0 0,1 98.2,35.2" />
+
+</vector>

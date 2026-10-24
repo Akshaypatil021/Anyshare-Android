@@ -1,0 +1,10 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- QR Code vector icon -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M3,3v8h8V3H3zM9,9H5V5h4V9zM3,13v8h8v-8H3zM9,19H5v-4h4V19zM13,3v8h8V3H13zM19,9h-4V5h4V9zM13,13h2v2h-2V13zM15,15h2v2h-2V15zM13,17h2v2h-2V17zM17,17h2v2h-2V17zM19,19h2v2h-2V19zM17,13h4v2h-4V13zM15,19h2v2h-2V19zM19,15h2v2h-2V15z" />
+</vector>

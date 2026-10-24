@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/scannerRoot"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#000000">
+
+    <!-- Camera Preview -->
+    <androidx.camera.view.PreviewView
+        android:id="@+id/previewView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- Top Toolbar Header -->
+    <LinearLayout
+        android:id="@+id/layoutHeader"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#80000000"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="16dp"
+        android:paddingTop="48dp"
+        android:paddingEnd="16dp"
+        android:paddingBottom="16dp"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageButton
+            android:id="@+id/btnBack"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Back"
+            android:src="@android:drawable/ic_menu_revert"
+            app:tint="#FFFFFF" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_weight="1"
+            android:text="Scan Sender's QR Code"
+            android:textColor="#FFFFFF"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <ImageButton
+            android:id="@+id/btnToggleTorch"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Flashlight"
+            android:src="@android:drawable/ic_menu_camera"
+            app:tint="#FFFFFF" />
+    </LinearLayout>
+
+    <!-- Viewfinder Targeting Reticle -->
+    <View
+        android:id="@+id/viewReticle"
+        android:layout_width="280dp"
+        android:layout_height="280dp"
+        android:background="@drawable/bg_scanner_reticle"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.45" />
+
+    <!-- Scanner Subtitle / Instruction -->
+    <TextView
+        android:id="@+id/tvInstruction"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="32dp"
+        android:layout_marginTop="20dp"
+        android:layout_marginEnd="32dp"
+        android:gravity="center"
+        android:text="Point camera at the QR code displayed on the sender's device"
+        android:textColor="#E2E8F0"
+        android:textSize="14sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/viewReticle" />
+
+    <!-- Fallback Action: Manual 4-Digit PIN Button -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnEnterPin"
+        style="@style/Widget.Material3.Button.OutlinedButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="48dp"
+        android:text="Enter 4-Digit PIN Instead"
+        android:textAllCaps="false"
+        android:textColor="#FFFFFF"
+        app:cornerRadius="24dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:strokeColor="#FFFFFF"
+        app:strokeWidth="1.5dp" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
