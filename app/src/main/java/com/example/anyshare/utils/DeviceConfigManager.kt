@@ -37,6 +37,13 @@ class DeviceConfigManager(private val context: Context) {
         private const val KEY_SAVE_MEDIA_GALLERY = "KEY_SAVE_MEDIA_GALLERY"
         private const val KEY_AUTO_FINISH = "KEY_AUTO_FINISH"
 
+        // Wi-Fi Transfer Band Modes
+        const val BAND_AUTO = 0 // Dynamic Auto (Recommended: 5GHz between modern phones, 2.4GHz with legacy phones)
+        const val BAND_2GHZ = 1 // 2.4 GHz Compatibility Mode
+        const val BAND_5GHZ = 2 // 5 GHz Turbo Mode
+
+        private const val KEY_WIFI_BAND_MODE = "KEY_WIFI_BAND_MODE"
+
         const val QUICK_SAVE_OFF = 0
         const val QUICK_SAVE_FAVOURITES = 1
         const val QUICK_SAVE_ON = 2
@@ -225,5 +232,16 @@ class DeviceConfigManager(private val context: Context) {
 
     fun setQuickSaveMode(mode: Int) {
         prefs.edit().putInt(KEY_QUICK_SAVE_MODE, mode).apply()
+    }
+
+    /**
+     * Wi-Fi Band Mode: AUTO (0), 2.4 GHz (1), 5 GHz (2)
+     */
+    fun getWifiBandPreference(): Int {
+        return prefs.getInt(KEY_WIFI_BAND_MODE, BAND_AUTO)
+    }
+
+    fun setWifiBandPreference(mode: Int) {
+        prefs.edit().putInt(KEY_WIFI_BAND_MODE, mode).apply()
     }
 }

@@ -33,6 +33,8 @@ class WifiDirectManager(private val context: Context) : WifiDirectBroadcastRecei
     private val manager: WifiP2pManager? =
         context.getSystemService(Context.WIFI_P2P_SERVICE) as? WifiP2pManager
 
+    private val deviceConfigManager = com.example.anyshare.utils.DeviceConfigManager(context)
+
     private var channel: WifiP2pManager.Channel? = null
     private var receiver: WifiDirectBroadcastReceiver? = null
     private var isReceiverRegistered = false
@@ -204,10 +206,17 @@ class WifiDirectManager(private val context: Context) : WifiDirectBroadcastRecei
                 }
             }
 
-            // Always prioritize 2.4 GHz band for autonomous group so older phones can connect seamlessly
+            // Dynamic band selection: AUTO allows Android to negotiate 5GHz if both phones support it, or 2.4GHz if either phone is older
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                val prefBand = deviceConfigManager.getWifiBandPreference()
+                val targetBand = when (prefBand) {
+                    com.example.anyshare.utils.DeviceConfigManager.BAND_5GHZ -> WifiP2pConfig.GROUP_OWNER_BAND_5GHZ
+                    com.example.anyshare.utils.DeviceConfigManager.BAND_2GHZ -> WifiP2pConfig.GROUP_OWNER_BAND_2GHZ
+                    else -> WifiP2pConfig.GROUP_OWNER_BAND_AUTO
+                }
+                Log.d(TAG, "Creating P2P Group with dynamic band mode: $targetBand (pref=$prefBand)")
                 val config = WifiP2pConfig.Builder()
-                    .setGroupOperatingBand(WifiP2pConfig.GROUP_OWNER_BAND_2GHZ)
+                    .setGroupOperatingBand(targetBand)
                     .build()
                 p2p.createGroup(ch, config, groupListener)
             } else {
@@ -294,9 +303,15 @@ class WifiDirectManager(private val context: Context) : WifiDirectBroadcastRecei
             groupOwnerIntent = 0 // Prefer client mode
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 try {
+                    val prefBand = deviceConfigManager.getWifiBandPreference()
+                    val targetBand = when (prefBand) {
+                        com.example.anyshare.utils.DeviceConfigManager.BAND_5GHZ -> WifiP2pConfig.GROUP_OWNER_BAND_5GHZ
+                        com.example.anyshare.utils.DeviceConfigManager.BAND_2GHZ -> WifiP2pConfig.GROUP_OWNER_BAND_2GHZ
+                        else -> WifiP2pConfig.GROUP_OWNER_BAND_AUTO
+                    }
                     val field = javaClass.getDeclaredField("groupOwnerBand")
                     field.isAccessible = true
-                    field.setInt(this, WifiP2pConfig.GROUP_OWNER_BAND_2GHZ)
+                    field.setInt(this, targetBand)
                 } catch (_: Exception) {}
             }
         }

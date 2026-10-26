@@ -76,6 +76,9 @@ class FileReceiver(
                 )
             )
 
+            val optimalSocketBuffer = com.example.anyshare.utils.HardwareCapabilityHelper.getOptimalSocketBufferSize(context)
+            Log.d(TAG, "Dynamic hardware tuning: socketBuffer=$optimalSocketBuffer bytes, profile=${com.example.anyshare.utils.HardwareCapabilityHelper.getHardwareSummary(context)}")
+
             // 1. Establish High-Throughput TCP Socket
             if (isGroupOwner) {
                 // Receiver is Group Owner (192.168.49.1): bind ServerSocket and accept Client
@@ -83,7 +86,7 @@ class FileReceiver(
                 serverSocket = ServerSocket().apply {
                     reuseAddress = true
                     soTimeout = 90_000 // 90s wait for sender connection
-                    receiveBufferSize = TransferConfig.SOCKET_BUFFER_SIZE
+                    receiveBufferSize = optimalSocketBuffer
                     bind(InetSocketAddress(listenPort))
                 }
                 currentServerSocket = serverSocket
@@ -92,8 +95,8 @@ class FileReceiver(
                 clientSocket = serverSocket.accept().apply {
                     tcpNoDelay = true
                     keepAlive = true
-                    receiveBufferSize = TransferConfig.SOCKET_BUFFER_SIZE
-                    sendBufferSize = TransferConfig.SOCKET_BUFFER_SIZE
+                    receiveBufferSize = optimalSocketBuffer
+                    sendBufferSize = optimalSocketBuffer
                     soTimeout = TransferConfig.SOCKET_TIMEOUT_MS
                 }
                 Log.d(TAG, "Sender client connected from ${clientSocket.inetAddress}")
@@ -134,8 +137,8 @@ class FileReceiver(
                         val s = Socket().apply {
                             tcpNoDelay = true
                             keepAlive = true
-                            receiveBufferSize = TransferConfig.SOCKET_BUFFER_SIZE
-                            sendBufferSize = TransferConfig.SOCKET_BUFFER_SIZE
+                            receiveBufferSize = optimalSocketBuffer
+                            sendBufferSize = optimalSocketBuffer
                             soTimeout = TransferConfig.SOCKET_TIMEOUT_MS
                         }
                         attemptSocket = s

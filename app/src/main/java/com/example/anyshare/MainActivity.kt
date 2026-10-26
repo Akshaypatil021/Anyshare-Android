@@ -424,12 +424,21 @@ class MainActivity : AppCompatActivity() {
         val isWifiOn = permissionManager.isWifiEnabled(this)
         val wifiText = if (isWifiOn) "Enabled (Ready)" else "Disabled (Tap to Enable)"
 
+        val hwProfile = com.example.anyshare.utils.HardwareCapabilityHelper.getHardwareSummary(this)
+        val bandModeText = when (deviceConfigManager.getWifiBandPreference()) {
+            com.example.anyshare.utils.DeviceConfigManager.BAND_5GHZ -> "5 GHz Turbo"
+            com.example.anyshare.utils.DeviceConfigManager.BAND_2GHZ -> "2.4 GHz Compatible"
+            else -> "⚡ Dynamic Auto (5GHz / 2.4GHz)"
+        }
+
         val message = """
             📱 Device Name: ${deviceConfigManager.getDeviceNickname()} (${deviceConfigManager.getDeviceTag()})
             
+            ⚙️ Hardware Profile: $hwProfile
+            
             📶 Wi-Fi Status: $wifiText
             
-            ⚡ Band Mode: 5 GHz Prioritized
+            ⚡ Band Mode: $bandModeText
             
             📂 Save Location: Downloads/Anyshare
         """.trimIndent()

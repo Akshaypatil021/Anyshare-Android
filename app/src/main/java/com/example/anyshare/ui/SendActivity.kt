@@ -368,10 +368,19 @@ class SendActivity : AppCompatActivity() {
 
     private fun showSettingsDialog() {
         val deviceConfigManager = DeviceConfigManager(this)
+        val hwProfile = com.example.anyshare.utils.HardwareCapabilityHelper.getHardwareSummary(this)
+        val bandModeText = when (deviceConfigManager.getWifiBandPreference()) {
+            com.example.anyshare.utils.DeviceConfigManager.BAND_5GHZ -> "5 GHz Turbo"
+            com.example.anyshare.utils.DeviceConfigManager.BAND_2GHZ -> "2.4 GHz Compatible"
+            else -> "⚡ Dynamic Auto (5GHz / 2.4GHz)"
+        }
+
         val message = """
             📱 Device Name: ${deviceConfigManager.getDeviceNickname()} (${deviceConfigManager.getDeviceTag()})
             
-            ⚡ Band Mode: 5 GHz Prioritized
+            ⚙️ Hardware Profile: $hwProfile
+            
+            ⚡ Band Mode: $bandModeText
             
             📂 Save Location: Downloads/Anyshare
         """.trimIndent()

@@ -131,6 +131,10 @@ class SettingsActivity : AppCompatActivity() {
         // 3. Animations toggle
         binding.switchAnimations.isChecked = deviceConfigManager.isAnimationsEnabled()
 
+        // 3b. Hardware profile & Wi-Fi Band
+        binding.tvHardwareProfile.text = com.example.anyshare.utils.HardwareCapabilityHelper.getHardwareSummary(this)
+        updateWifiBandLabel(deviceConfigManager.getWifiBandPreference())
+
         // 4. Quick Save switches
         binding.switchQuickSave.isChecked = deviceConfigManager.isQuickSaveEnabled()
         binding.switchQuickSaveFav.isChecked = deviceConfigManager.isQuickSaveFavouritesEnabled()
@@ -167,7 +171,20 @@ class SettingsActivity : AppCompatActivity() {
         }
     }
 
+    private fun updateWifiBandLabel(mode: Int) {
+        binding.tvWifiBandValue.text = when (mode) {
+            DeviceConfigManager.BAND_5GHZ -> "5 GHz ⚡"
+            DeviceConfigManager.BAND_2GHZ -> "2.4 GHz"
+            else -> "Auto ⚡"
+        }
+    }
+
     private fun setupListeners() {
+        // Wi-Fi Band dialog
+        binding.btnWifiBand.setOnClickListener {
+            showWifiBandSelectionDialog()
+        }
+
         // Theme selection dialog
         binding.btnTheme.setOnClickListener {
             showThemeSelectionDialog()
@@ -238,6 +255,39 @@ class SettingsActivity : AppCompatActivity() {
             // Already on settings; scroll to top smoothly
             binding.scrollSettingsContent.smoothScrollTo(0, 0)
         }
+    }
+
+    private fun showWifiBandSelectionDialog() {
+        val bands = arrayOf(
+            "⚡ Auto (Dynamic - Best for 5GHz & 2.4GHz)",
+            "🚀 5 GHz Turbo (Max Speed - requires 5GHz on both)",
+            "🛡️ 2.4 GHz Compatible (Max compatibility for older phones)"
+        )
+        val currentSelection = when (deviceConfigManager.getWifiBandPreference()) {
+            DeviceConfigManager.BAND_5GHZ -> 1
+            DeviceConfigManager.BAND_2GHZ -> 2
+            else -> 0
+        }
+
+        MaterialAlertDialogBuilder(this)
+            .setTitle("Wi-Fi Transfer Band")
+            .setSingleChoiceItems(bands, currentSelection) { dialog, which ->
+                val selectedMode = when (which) {
+                    1 -> DeviceConfigManager.BAND_5GHZ
+                    2 -> DeviceConfigManager.BAND_2GHZ
+                    else -> DeviceConfigManager.BAND_AUTO
+                }
+                deviceConfigManager.setWifiBandPreference(selectedMode)
+                updateWifiBandLabel(selectedMode)
+                Toast.makeText(
+                    this,
+                    if (selectedMode == DeviceConfigManager.BAND_AUTO) "Dynamic Auto-negotiation enabled" else "Band mode updated",
+                    Toast.LENGTH_SHORT
+                ).show()
+                dialog.dismiss()
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
     }
 
     private fun showThemeSelectionDialog() {

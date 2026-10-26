@@ -88,14 +88,17 @@ class FileSender(
                 )
             )
 
+            val optimalSocketBuffer = com.example.anyshare.utils.HardwareCapabilityHelper.getOptimalSocketBufferSize(context)
+            Log.d(TAG, "Dynamic hardware tuning: socketBuffer=$optimalSocketBuffer bytes, profile=${com.example.anyshare.utils.HardwareCapabilityHelper.getHardwareSummary(context)}")
+
             // 2. Establish High-Throughput TCP Socket
             if (isGroupOwner) {
                 // Sender is Group Owner (192.168.49.1): open ServerSocket and accept Client
                 Log.d(TAG, "Sender is Group Owner. Binding ServerSocket on port $targetPort...")
                 serverSocket = ServerSocket().apply {
                     reuseAddress = true
-                    soTimeout = 60_000 // 60s timeout for receiver to connect
-                    receiveBufferSize = TransferConfig.SOCKET_BUFFER_SIZE
+                    soTimeout = 90_000 // 90s timeout for receiver to connect
+                    receiveBufferSize = optimalSocketBuffer
                     bind(InetSocketAddress(targetPort))
                 }
                 currentServerSocket = serverSocket
@@ -104,8 +107,8 @@ class FileSender(
                 socket = serverSocket.accept().apply {
                     tcpNoDelay = true
                     keepAlive = true
-                    sendBufferSize = TransferConfig.SOCKET_BUFFER_SIZE
-                    receiveBufferSize = TransferConfig.SOCKET_BUFFER_SIZE
+                    sendBufferSize = optimalSocketBuffer
+                    receiveBufferSize = optimalSocketBuffer
                     soTimeout = TransferConfig.SOCKET_TIMEOUT_MS
                 }
                 Log.d(TAG, "Receiver connected from ${socket.inetAddress}")
@@ -139,8 +142,8 @@ class FileSender(
                         val s = Socket().apply {
                             tcpNoDelay = true
                             keepAlive = true
-                            sendBufferSize = TransferConfig.SOCKET_BUFFER_SIZE
-                            receiveBufferSize = TransferConfig.SOCKET_BUFFER_SIZE
+                            sendBufferSize = optimalSocketBuffer
+                            receiveBufferSize = optimalSocketBuffer
                             soTimeout = TransferConfig.SOCKET_TIMEOUT_MS
                         }
                         attemptSocket = s
@@ -199,11 +202,7 @@ class FileSender(
                 if (isCancelled) break
                 val fileUri = fileUris[index]
 
-                val effectiveChunkSize = if (metadata.fileSize > 100 * 1024 * 1024) {
-                    TransferConfig.MAX_CHUNK_SIZE
-                } else {
-                    preferredChunkSize.coerceIn(TransferConfig.MIN_CHUNK_SIZE, TransferConfig.MAX_CHUNK_SIZE)
-                }
+                val effectiveChunkSize = com.example.anyshare.utils.HardwareCapabilityHelper.getOptimalChunkSize(context, metadata.fileSize)
 
                 val displayName = if (fileUris.size > 1) {
                     "${metadata.fileName} (${index + 1}/${fileUris.size})"

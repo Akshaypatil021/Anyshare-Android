@@ -9,14 +9,14 @@ object TransferConfig {
     /** 64 KB Minimum Sending Block Size - highly resilient for low-RAM / legacy phones */
     const val MIN_CHUNK_SIZE = 64 * 1024 // 64 KB
 
-    /** 512 KB Maximum Sending Block Size for large files */
-    const val MAX_CHUNK_SIZE = 512 * 1024 // 512 KB
+    /** 1 MB Maximum Sending Block Size for high-throughput streaming on modern phones */
+    const val MAX_CHUNK_SIZE = 1024 * 1024 // 1 MB
 
-    /** 128 KB Default Chunk Size - universally optimal throughput without memory pressure */
-    const val DEFAULT_CHUNK_SIZE = 128 * 1024 // 128 KB
+    /** 256 KB Default Chunk Size */
+    const val DEFAULT_CHUNK_SIZE = 256 * 1024 // 256 KB
 
-    /** 256 KB TCP Socket buffer size - prevents kernel buffer drops on older devices */
-    const val SOCKET_BUFFER_SIZE = 256 * 1024 // 256 KB
+    /** 1 MB Max TCP Socket buffer size */
+    const val SOCKET_BUFFER_SIZE = 1024 * 1024 // 1 MB
 
     /** Socket read timeout in milliseconds (60s) - tolerates slow flash storage & GC pauses on older phones */
     const val SOCKET_TIMEOUT_MS = 60_000
