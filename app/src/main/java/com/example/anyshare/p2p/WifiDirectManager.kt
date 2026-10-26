@@ -209,22 +209,36 @@ class WifiDirectManager(private val context: Context) : WifiDirectBroadcastRecei
             // Dynamic band selection: AUTO allows Android to negotiate 5GHz if both phones support it, or 2.4GHz if either phone is older
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 val prefBand = deviceConfigManager.getWifiBandPreference()
-                val targetBand = when (prefBand) {
-                    com.example.anyshare.utils.DeviceConfigManager.BAND_5GHZ -> WifiP2pConfig.GROUP_OWNER_BAND_5GHZ
-                    com.example.anyshare.utils.DeviceConfigManager.BAND_2GHZ -> WifiP2pConfig.GROUP_OWNER_BAND_2GHZ
-                    else -> WifiP2pConfig.GROUP_OWNER_BAND_AUTO
+                if (prefBand == com.example.anyshare.utils.DeviceConfigManager.BAND_5GHZ ||
+                    prefBand == com.example.anyshare.utils.DeviceConfigManager.BAND_2GHZ
+                ) {
+                    val targetBand = if (prefBand == com.example.anyshare.utils.DeviceConfigManager.BAND_5GHZ) {
+                        WifiP2pConfig.GROUP_OWNER_BAND_5GHZ
+                    } else {
+                        WifiP2pConfig.GROUP_OWNER_BAND_2GHZ
+                    }
+                    try {
+                        val rand = (1000..9999).random()
+                        val config = WifiP2pConfig.Builder()
+                            .setNetworkName("DIRECT-AS-$rand")
+                            .setPassphrase("anyshare$rand")
+                            .setGroupOperatingBand(targetBand)
+                            .build()
+                        Log.d(TAG, "Creating P2P Group with forced band $targetBand (SSID: DIRECT-AS-$rand)")
+                        p2p.createGroup(ch, config, groupListener)
+                        return
+                    } catch (e: Exception) {
+                        Log.w(TAG, "Forced band createGroup failed, falling back to standard createGroup: ${e.message}")
+                    }
                 }
-                Log.d(TAG, "Creating P2P Group with dynamic band mode: $targetBand (pref=$prefBand)")
-                val config = WifiP2pConfig.Builder()
-                    .setGroupOperatingBand(targetBand)
-                    .build()
-                p2p.createGroup(ch, config, groupListener)
-            } else {
-                p2p.createGroup(ch, groupListener)
             }
-        } catch (e: SecurityException) {
-            Log.e(TAG, "SecurityException in createGroup: ${e.message}")
-            _connectionState.value = P2pConnectionState.Error("Nearby permission required", -1)
+
+            // Standard autonomous group creation for AUTO mode and all fallbacks
+            Log.d(TAG, "Creating standard autonomous P2P group (Auto Band)")
+            p2p.createGroup(ch, groupListener)
+        } catch (e: Exception) {
+            Log.e(TAG, "Exception in proceedGroupCreation: ${e.message}")
+            _connectionState.value = P2pConnectionState.Error("Failed to create group: ${e.message}", -1)
             onResult(false, e.message)
         }
     }
@@ -285,6 +299,8 @@ class WifiDirectManager(private val context: Context) : WifiDirectBroadcastRecei
 
     /**
      * Connect to a specific peer as a Client.
+     * Stops peer discovery asynchronously and waits for the radio to enter idle state
+     * before issuing connect, preventing framework ERROR (0) internal errors.
      */
     @SuppressLint("MissingPermission")
     fun connectToDevice(
@@ -294,29 +310,43 @@ class WifiDirectManager(private val context: Context) : WifiDirectBroadcastRecei
         val p2p = manager ?: return onResult(false, "WifiP2pManager unavailable")
         val ch = channel ?: return onResult(false, "Channel uninitialized")
 
-        // Stop discovery before connecting so radio is ready
-        stopDiscovery()
+        _connectionState.value = P2pConnectionState.Connecting(deviceAddress)
 
+        // Cancel any stale connection attempts first
+        p2p.cancelConnect(ch, null)
+
+        // Asynchronously stop peer discovery before connecting
+        p2p.stopPeerDiscovery(ch, object : WifiP2pManager.ActionListener {
+            override fun onSuccess() {
+                Log.d(TAG, "Discovery stopped cleanly before connecting.")
+                // Give the Wi-Fi radio 200ms to settle into idle state before initiating connect
+                android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                    executeConnect(p2p, ch, deviceAddress, onResult)
+                }, 200)
+            }
+
+            override fun onFailure(reason: Int) {
+                Log.d(TAG, "stopPeerDiscovery returned reason $reason, proceeding to connect in 200ms.")
+                android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                    executeConnect(p2p, ch, deviceAddress, onResult)
+                }, 200)
+            }
+        })
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun executeConnect(
+        p2p: WifiP2pManager,
+        ch: WifiP2pManager.Channel,
+        deviceAddress: String,
+        onResult: (success: Boolean, errorMessage: String?) -> Unit
+    ) {
         val config = WifiP2pConfig().apply {
             this.deviceAddress = deviceAddress
             wps.setup = WpsInfo.PBC
-            groupOwnerIntent = 0 // Prefer client mode
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                try {
-                    val prefBand = deviceConfigManager.getWifiBandPreference()
-                    val targetBand = when (prefBand) {
-                        com.example.anyshare.utils.DeviceConfigManager.BAND_5GHZ -> WifiP2pConfig.GROUP_OWNER_BAND_5GHZ
-                        com.example.anyshare.utils.DeviceConfigManager.BAND_2GHZ -> WifiP2pConfig.GROUP_OWNER_BAND_2GHZ
-                        else -> WifiP2pConfig.GROUP_OWNER_BAND_AUTO
-                    }
-                    val field = javaClass.getDeclaredField("groupOwnerBand")
-                    field.isAccessible = true
-                    field.setInt(this, targetBand)
-                } catch (_: Exception) {}
-            }
+            // Default groupOwnerIntent (-1) lets Android negotiate GO/Client role based on device capabilities
+            groupOwnerIntent = -1
         }
-
-        _connectionState.value = P2pConnectionState.Connecting(deviceAddress)
 
         try {
             p2p.connect(ch, config, object : WifiP2pManager.ActionListener {
@@ -327,9 +357,13 @@ class WifiDirectManager(private val context: Context) : WifiDirectBroadcastRecei
 
                 override fun onFailure(reason: Int) {
                     val msg = P2pErrorHelper.getErrorMessage(reason)
-                    Log.e(TAG, "Connect to $deviceAddress failed: $msg (reason $reason)")
-                    if (reason == WifiP2pManager.BUSY) {
-                        // Radio was briefly busy; retry connect once after 600ms
+                    Log.w(TAG, "Connect to $deviceAddress failed: $msg (reason $reason)")
+
+                    // If framework is BUSY (2) or reports internal ERROR (0) on initial attempt due to radio settling,
+                    // cancel connect and retry once after 600ms.
+                    if (reason == WifiP2pManager.BUSY || reason == WifiP2pManager.ERROR) {
+                        Log.d(TAG, "Transient connect error ($reason), retrying once after 600ms...")
+                        p2p.cancelConnect(ch, null)
                         android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
                             try {
                                 p2p.connect(ch, config, object : WifiP2pManager.ActionListener {
@@ -337,8 +371,10 @@ class WifiDirectManager(private val context: Context) : WifiDirectBroadcastRecei
                                         Log.d(TAG, "Connect to $deviceAddress succeeded on retry.")
                                         onResult(true, null)
                                     }
+
                                     override fun onFailure(r: Int) {
                                         val retryMsg = P2pErrorHelper.getErrorMessage(r)
+                                        Log.e(TAG, "Connect retry failed: $retryMsg (reason $r)")
                                         _connectionState.value = P2pConnectionState.Error(retryMsg, r)
                                         onResult(false, retryMsg)
                                     }
@@ -349,13 +385,14 @@ class WifiDirectManager(private val context: Context) : WifiDirectBroadcastRecei
                         }, 600)
                         return
                     }
+
                     _connectionState.value = P2pConnectionState.Error(msg, reason)
                     onResult(false, msg)
                 }
             })
-        } catch (e: SecurityException) {
-            Log.e(TAG, "SecurityException in connect: ${e.message}")
-            _connectionState.value = P2pConnectionState.Error("Nearby permission required", -1)
+        } catch (e: Exception) {
+            Log.e(TAG, "Exception in executeConnect: ${e.message}")
+            _connectionState.value = P2pConnectionState.Error("Connection error: ${e.message}", -1)
             onResult(false, e.message)
         }
     }

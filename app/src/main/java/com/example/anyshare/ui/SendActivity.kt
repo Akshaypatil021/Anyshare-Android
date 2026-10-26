@@ -440,40 +440,48 @@ class SendActivity : AppCompatActivity() {
     }
 
     private fun displayQrDialog(state: P2pConnectionState.GroupOwnerReady) {
-        val payload = QrConnectionPayload(
-            ssid = state.ssid,
-            passphrase = state.passphrase,
-            hostIp = state.hostIp,
-            port = state.port,
-            token = state.securityToken,
-            pinCode = state.pinCode,
-            deviceName = wifiDirectManager.thisDevice.value?.deviceName ?: "Anyshare Sender"
-        )
+        if (isFinishing || isDestroyed) return
 
-        val qrBitmap = QrCodeGenerator.generateQrBitmap(payload.toJson(), 600)
+        try {
+            val payload = QrConnectionPayload(
+                ssid = state.ssid,
+                passphrase = state.passphrase,
+                hostIp = state.hostIp,
+                port = state.port,
+                token = state.securityToken,
+                pinCode = state.pinCode,
+                deviceName = wifiDirectManager.thisDevice.value?.deviceName ?: "Anyshare Sender"
+            )
 
-        val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_qr_display, null)
-        val ivQr = dialogView.findViewById<ImageView>(R.id.ivQrCode)
-        val chipPin = dialogView.findViewById<Chip>(R.id.chipPinCode)
-        val chipSsid = dialogView.findViewById<Chip>(R.id.chipSsid)
-        val btnClose = dialogView.findViewById<View>(R.id.btnCloseQr)
+            val qrBitmap = QrCodeGenerator.generateQrBitmap(payload.toJson(), 600)
 
-        ivQr.setImageBitmap(qrBitmap)
-        chipPin.text = "PIN: ${state.pinCode}"
-        chipSsid.text = state.ssid
+            val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_qr_display, null)
+            val ivQr = dialogView.findViewById<ImageView>(R.id.ivQrCode)
+            val chipPin = dialogView.findViewById<Chip>(R.id.chipPinCode)
+            val chipSsid = dialogView.findViewById<Chip>(R.id.chipSsid)
+            val btnClose = dialogView.findViewById<View>(R.id.btnCloseQr)
 
-        activeQrDialog?.dismiss()
-        activeQrDialog = AlertDialog.Builder(this)
-            .setView(dialogView)
-            .setCancelable(false)
-            .create()
+            ivQr.setImageBitmap(qrBitmap)
+            chipPin.text = "PIN: ${state.pinCode}"
+            chipSsid.text = state.ssid
 
-        btnClose.setOnClickListener {
             activeQrDialog?.dismiss()
-            wifiDirectManager.disconnectAndRemoveGroup()
-        }
+            activeQrDialog = AlertDialog.Builder(this)
+                .setView(dialogView)
+                .setCancelable(false)
+                .create()
 
-        activeQrDialog?.show()
+            btnClose.setOnClickListener {
+                activeQrDialog?.dismiss()
+                wifiDirectManager.disconnectAndRemoveGroup()
+            }
+
+            if (!isFinishing && !isDestroyed) {
+                activeQrDialog?.show()
+            }
+        } catch (e: Exception) {
+            Toast.makeText(this, "Could not show QR code: ${e.message}", Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun startTransferringFiles(targetHost: String, isGroupOwner: Boolean) {
