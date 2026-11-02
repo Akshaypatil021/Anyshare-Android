@@ -36,9 +36,11 @@ class NearbyPeersAdapter(
 
             val statusText = when (device.status) {
                 WifiP2pDevice.AVAILABLE -> "Available • Tap to Send"
-                WifiP2pDevice.INVITED -> "Connecting..."
-                WifiP2pDevice.CONNECTED -> "Connected"
-                else -> "Ready to pair"
+                WifiP2pDevice.INVITED -> "Pending • Tap to Reconnect"
+                WifiP2pDevice.CONNECTED -> "Connected • Tap to Send"
+                WifiP2pDevice.FAILED -> "Failed • Tap to Retry"
+                WifiP2pDevice.UNAVAILABLE -> "Unavailable"
+                else -> "Ready to pair • Tap to Send"
             }
             binding.tvPeerStatus.text = statusText
 

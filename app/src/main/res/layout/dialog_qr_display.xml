@@ -53,25 +53,30 @@
         android:gravity="center"
         android:orientation="horizontal">
 
-        <com.google.android.material.chip.Chip
+        <TextView
             android:id="@+id/chipPinCode"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="PIN: ----"
             android:textStyle="bold"
-            app:chipBackgroundColor="#F1F5F9"
-            app:chipStrokeColor="#94A3B8"
-            app:chipStrokeWidth="1dp" />
+            android:textSize="13sp"
+            android:paddingHorizontal="14dp"
+            android:paddingVertical="8dp"
+            android:textColor="?android:textColorPrimary"
+            android:background="@drawable/bg_settings_pill" />
 
-        <com.google.android.material.chip.Chip
+        <TextView
             android:id="@+id/chipSsid"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
             android:text="DIRECT-Anyshare"
-            app:chipBackgroundColor="#EEF2FF"
-            app:chipStrokeColor="#818CF8"
-            app:chipStrokeWidth="1dp" />
+            android:textStyle="bold"
+            android:textSize="13sp"
+            android:paddingHorizontal="14dp"
+            android:paddingVertical="8dp"
+            android:textColor="@color/primary"
+            android:background="@drawable/bg_settings_pill" />
     </LinearLayout>
 
     <com.google.android.material.button.MaterialButton

@@ -15,6 +15,8 @@ import androidx.lifecycle.lifecycleScope
 import com.example.anyshare.databinding.ActivityTransferBinding
 import com.example.anyshare.history.HistoryItem
 import com.example.anyshare.history.HistoryManager
+import com.example.anyshare.p2p.P2pNetworkConnector
+import com.example.anyshare.p2p.WifiDirectManager
 import com.example.anyshare.service.TransferService
 import com.example.anyshare.transfer.TransferMetricsCalculator
 import com.example.anyshare.transfer.TransferStatus
@@ -33,6 +35,8 @@ class TransferActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityTransferBinding
     private lateinit var historyManager: HistoryManager
+    private lateinit var wifiDirectManager: WifiDirectManager
+    private lateinit var p2pNetworkConnector: P2pNetworkConnector
     private var isSender: Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -57,6 +61,8 @@ class TransferActivity : AppCompatActivity() {
         }
 
         historyManager = HistoryManager(this)
+        wifiDirectManager = WifiDirectManager(this)
+        p2pNetworkConnector = P2pNetworkConnector(this)
         isSender = intent.getBooleanExtra(EXTRA_IS_SENDER, false)
         val initialFileName = intent.getStringExtra(EXTRA_FILE_NAME) ?: "File Transfer"
 
@@ -74,6 +80,8 @@ class TransferActivity : AppCompatActivity() {
                 .setMessage("Are you sure you want to stop this file transfer?")
                 .setPositiveButton("Yes, Cancel") { _, _ ->
                     TransferService.cancelTransfer(this)
+                    wifiDirectManager.disconnectAndRemoveGroup()
+                    p2pNetworkConnector.disconnect()
                     Toast.makeText(this, "Transfer cancelled", Toast.LENGTH_SHORT).show()
                     finish()
                 }
@@ -125,6 +133,10 @@ class TransferActivity : AppCompatActivity() {
                             )
                         )
 
+                        // Clean up P2P connection now that the file is 100% saved on disk
+                        wifiDirectManager.disconnectAndRemoveGroup()
+                        p2pNetworkConnector.disconnect()
+
                         // Transition to Screen 5: Completed / History Screen
                         val intent = Intent(this@TransferActivity, HistoryActivity::class.java).apply {
                             putExtra(HistoryActivity.EXTRA_JUST_COMPLETED, true)
@@ -159,6 +171,14 @@ class TransferActivity : AppCompatActivity() {
     override fun finish() {
         super.finish()
         com.example.anyshare.utils.ActivityTransitionHelper.applySlideCloseTransition(this)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        if (isFinishing) {
+            wifiDirectManager.disconnectAndRemoveGroup()
+            p2pNetworkConnector.disconnect()
+        }
     }
 
     private fun getFileEmoji(fileName: String): String {

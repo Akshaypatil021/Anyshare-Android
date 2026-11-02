@@ -24,6 +24,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import com.example.anyshare.history.HistoryManager
 import com.example.anyshare.p2p.P2pConnectionState
+import com.example.anyshare.p2p.P2pNetworkConnector
 import com.example.anyshare.p2p.WifiDirectManager
 import com.example.anyshare.permission.PermissionManager
 import com.example.anyshare.qr.QrConnectionPayload
@@ -48,6 +49,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var wifiDirectManager: WifiDirectManager
     private lateinit var historyManager: HistoryManager
     private lateinit var deviceConfigManager: DeviceConfigManager
+    private lateinit var p2pNetworkConnector: P2pNetworkConnector
     private var outerRingAnimator: ObjectAnimator? = null
 
     // ActivityResult launcher for QR Scanner (Screen 3)
@@ -103,6 +105,7 @@ class MainActivity : AppCompatActivity() {
         wifiDirectManager = WifiDirectManager(this)
         historyManager = HistoryManager(this)
         deviceConfigManager = DeviceConfigManager(this)
+        p2pNetworkConnector = P2pNetworkConnector(this)
 
         initUI()
         setupListeners()
@@ -149,6 +152,7 @@ class MainActivity : AppCompatActivity() {
     override fun onStart() {
         super.onStart()
         wifiDirectManager.register()
+        wifiDirectManager.cancelConnect() // Clear any stale invitations so this device is fresh and discoverable
         if (PermissionManager.hasNearbyPermissions(this)) {
             startPeriodicDiscovery()
         }
@@ -234,6 +238,9 @@ class MainActivity : AppCompatActivity() {
         super.onDestroy()
         outerRingAnimator?.cancel()
         outerRingAnimator = null
+        if (::p2pNetworkConnector.isInitialized) {
+            p2pNetworkConnector.disconnect()
+        }
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {
@@ -520,13 +527,31 @@ class MainActivity : AppCompatActivity() {
     }
 
     /**
-     * Receiver Flow: Connects to sender and launches TransferActivity.
+     * Receiver Flow: Connects to sender's Wi-Fi Direct network and launches TransferActivity.
      */
     private fun handleReceiverPairing(payload: QrConnectionPayload) {
-        MaterialAlertDialogBuilder(this)
-            .setTitle("Sender Found!")
-            .setMessage("Connect to ${payload.deviceName} (${payload.ssid})?")
-            .setPositiveButton("Connect") { _, _ ->
+        // Cancel background peer discovery so Wi-Fi radio is 100% focused on connecting
+        discoveryJob?.cancel()
+        discoveryJob = null
+        wifiDirectManager.stopDiscovery()
+
+        val progressDialog = MaterialAlertDialogBuilder(this)
+            .setTitle("Connecting to ${payload.deviceName}...")
+            .setMessage("Joining ${payload.ssid} Wi-Fi network...")
+            .setCancelable(false)
+            .setNegativeButton("Cancel") { _, _ ->
+                p2pNetworkConnector.disconnect()
+                startPeriodicDiscovery()
+            }
+            .create()
+        progressDialog.show()
+
+        p2pNetworkConnector.connectToGroup(payload.ssid, payload.passphrase) { success, _, error ->
+            if (!isFinishing && !isDestroyed) {
+                try { progressDialog.dismiss() } catch (_: Exception) {}
+            }
+            if (success) {
+                Toast.makeText(this, "Connected to ${payload.deviceName}! Starting transfer...", Toast.LENGTH_SHORT).show()
                 // Start listening/connecting service for incoming file stream from QR sender
                 TransferService.startReceiving(
                     context = this,
@@ -540,9 +565,19 @@ class MainActivity : AppCompatActivity() {
                     putExtra(TransferActivity.EXTRA_IS_SENDER, false)
                     putExtra(TransferActivity.EXTRA_FILE_NAME, "Receiving from ${payload.deviceName}")
                 }
-                startActivity(intent)
+                com.example.anyshare.utils.ActivityTransitionHelper.startActivityWithSlide(this, intent)
+            } else {
+                MaterialAlertDialogBuilder(this)
+                    .setTitle("Connection Failed")
+                    .setMessage("Could not connect to ${payload.deviceName} ($error).\n\nPlease make sure:\n1. Wi-Fi is enabled on both devices.\n2. Sender's QR screen is still open.\n3. Location/GPS is enabled.")
+                    .setPositiveButton("Retry") { _, _ ->
+                        handleReceiverPairing(payload)
+                    }
+                    .setNegativeButton("Cancel") { _, _ ->
+                        startPeriodicDiscovery()
+                    }
+                    .show()
             }
-            .setNegativeButton("Cancel", null)
-            .show()
+        }
     }
 }

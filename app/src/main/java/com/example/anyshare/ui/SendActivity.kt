@@ -3,13 +3,18 @@ package com.example.anyshare.ui
 import android.content.Intent
 import android.content.res.Configuration
 import android.net.Uri
+import android.net.wifi.p2p.WifiP2pDevice
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.provider.OpenableColumns
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.EditText
 import android.widget.ImageView
+import android.widget.TextView
 import android.widget.Toast
+import android.util.Log
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
@@ -32,8 +37,8 @@ import androidx.activity.OnBackPressedCallback
 import com.example.anyshare.MainActivity
 import com.example.anyshare.utils.ActivityTransitionHelper
 import com.example.anyshare.utils.DeviceConfigManager
-import com.google.android.material.chip.Chip
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import java.io.File
@@ -53,6 +58,9 @@ class SendActivity : AppCompatActivity() {
 
     private var activeQrDialog: AlertDialog? = null
     private var loadingDialog: AlertDialog? = null
+    private var isTransferStarting = false
+    private var isBatchStarted = false
+    private var connectTimeoutJob: Job? = null
 
     // System file picker launcher for selecting multiple documents/media
     private val filePickerLauncher = registerForActivityResult(
@@ -118,6 +126,13 @@ class SendActivity : AppCompatActivity() {
     override fun onStart() {
         super.onStart()
         wifiDirectManager.register()
+        // If not actively transferring, reset any stale invitations or groups from previous sessions
+        if (!isBatchStarted && !isTransferStarting) {
+            wifiDirectManager.cancelConnect()
+            if (wifiDirectManager.activeGroup.value != null) {
+                wifiDirectManager.disconnectAndRemoveGroup()
+            }
+        }
         // Discover nearby devices on-demand: check or request nearby permission
         if (PermissionManager.hasNearbyPermissions(this)) {
             wifiDirectManager.startDiscovery { _, _ -> }
@@ -159,8 +174,14 @@ class SendActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
+        connectTimeoutJob?.cancel()
+        connectTimeoutJob = null
         activeQrDialog?.dismiss()
         loadingDialog?.dismiss()
+        if (!isTransferStarting && isBatchStarted) {
+            TransferService.cancelTransfer(this)
+            wifiDirectManager.disconnectAndRemoveGroup()
+        }
     }
 
     private fun setupSystemBarsTheme() {
@@ -188,13 +209,58 @@ class SendActivity : AppCompatActivity() {
                 return@NearbyPeersAdapter
             }
 
-            showLoadingDialog("Connecting to ${selectedDevice.deviceName}...\nPlease accept connection on receiving phone.")
-            wifiDirectManager.connectToDevice(selectedDevice.deviceAddress) { success, errorMsg ->
-                if (!success) {
-                    hideLoadingDialog()
-                    Toast.makeText(this, "Failed to connect: $errorMsg", Toast.LENGTH_SHORT).show()
+            showLoadingDialog(
+                message = "Connecting to ${selectedDevice.deviceName}...\n\n👉 Please tap 'Accept' on receiver's phone (check notification bar if popup doesn't appear).",
+                onCancel = {
+                    connectTimeoutJob?.cancel()
+                    connectTimeoutJob = null
+                    wifiDirectManager.cancelConnect()
+                    Toast.makeText(this, "Connection cancelled", Toast.LENGTH_SHORT).show()
                 }
-                // Keep dialog open until P2pConnectionState changes to ConnectedAsClient/GroupOwner
+            )
+
+            // 20-second timeout guard so it never gets permanently stuck on "Connecting..."
+            connectTimeoutJob?.cancel()
+            connectTimeoutJob = lifecycleScope.launch {
+                kotlinx.coroutines.delay(20_000L)
+                if (loadingDialog != null) {
+                    hideLoadingDialog()
+                    Toast.makeText(
+                        this@SendActivity,
+                        "Connection timed out. Please tap the QR code icon above to connect instantly without waiting for invitation!",
+                        Toast.LENGTH_LONG
+                    ).show()
+                    wifiDirectManager.cancelConnect()
+                }
+            }
+
+            if (selectedDevice.status == WifiP2pDevice.INVITED) {
+                Log.d("SendActivity", "Selected peer is in INVITED state; reconnecting cleanly...")
+                wifiDirectManager.reconnectCleanly(selectedDevice.deviceAddress) { success, errorMsg ->
+                    if (!success) {
+                        hideLoadingDialog()
+                        Toast.makeText(this, "Failed to connect: $errorMsg", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            } else if (selectedDevice.status == WifiP2pDevice.CONNECTED) {
+                Log.d("SendActivity", "Selected peer is in CONNECTED state; resetting group and reconnecting...")
+                wifiDirectManager.disconnectAndRemoveGroup {
+                    Handler(Looper.getMainLooper()).postDelayed({
+                        wifiDirectManager.connectToDevice(selectedDevice.deviceAddress) { success, errorMsg ->
+                            if (!success) {
+                                hideLoadingDialog()
+                                Toast.makeText(this, "Failed to connect: $errorMsg", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    }, 300)
+                }
+            } else {
+                wifiDirectManager.connectToDevice(selectedDevice.deviceAddress) { success, errorMsg ->
+                    if (!success) {
+                        hideLoadingDialog()
+                        Toast.makeText(this, "Failed to connect: $errorMsg", Toast.LENGTH_SHORT).show()
+                    }
+                }
             }
         }
         binding.recyclerNearbyPeers.layoutManager = LinearLayoutManager(this)
@@ -404,22 +470,47 @@ class SendActivity : AppCompatActivity() {
 
                     is P2pConnectionState.ConnectedAsGroupOwner -> {
                         hideLoadingDialog()
-                        activeQrDialog?.dismiss()
-                        startTransferringFiles(state.hostAddress, isGroupOwner = true)
+                        connectTimeoutJob?.cancel()
+                        connectTimeoutJob = null
+                        if (!isTransferStarting) {
+                            startTransferringFiles(state.hostAddress, isGroupOwner = true)
+                        }
                     }
 
                     is P2pConnectionState.ConnectedAsClient -> {
                         hideLoadingDialog()
-                        activeQrDialog?.dismiss()
-                        startTransferringFiles(state.groupOwnerAddress, isGroupOwner = false)
+                        connectTimeoutJob?.cancel()
+                        connectTimeoutJob = null
+                        if (!isTransferStarting) {
+                            startTransferringFiles(state.groupOwnerAddress, isGroupOwner = false)
+                        }
                     }
 
                     is P2pConnectionState.Error -> {
                         hideLoadingDialog()
+                        connectTimeoutJob?.cancel()
+                        connectTimeoutJob = null
                         Toast.makeText(this@SendActivity, state.message, Toast.LENGTH_SHORT).show()
                     }
 
                     else -> {}
+                }
+            }
+        }
+
+        // Observe TransferService progress: if socket connects & handshakes, transition immediately
+        lifecycleScope.launch {
+            TransferService.transferProgress.collectLatest { progress ->
+                if (progress == null) return@collectLatest
+                val status = progress.status
+                if (status is com.example.anyshare.transfer.TransferStatus.Handshaking ||
+                    status is com.example.anyshare.transfer.TransferStatus.InProgress
+                ) {
+                    if (!isTransferStarting) {
+                        isTransferStarting = true
+                        activeQrDialog?.dismiss()
+                        navigateToTransferActivity()
+                    }
                 }
             }
         }
@@ -457,29 +548,56 @@ class SendActivity : AppCompatActivity() {
 
             val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_qr_display, null)
             val ivQr = dialogView.findViewById<ImageView>(R.id.ivQrCode)
-            val chipPin = dialogView.findViewById<Chip>(R.id.chipPinCode)
-            val chipSsid = dialogView.findViewById<Chip>(R.id.chipSsid)
+            val chipPin = dialogView.findViewById<TextView>(R.id.chipPinCode)
+            val chipSsid = dialogView.findViewById<TextView>(R.id.chipSsid)
             val btnClose = dialogView.findViewById<View>(R.id.btnCloseQr)
 
-            ivQr.setImageBitmap(qrBitmap)
+            if (qrBitmap != null) {
+                ivQr.setImageBitmap(qrBitmap)
+            }
             chipPin.text = "PIN: ${state.pinCode}"
             chipSsid.text = state.ssid
 
             activeQrDialog?.dismiss()
-            activeQrDialog = AlertDialog.Builder(this)
+            activeQrDialog = MaterialAlertDialogBuilder(this)
                 .setView(dialogView)
                 .setCancelable(false)
                 .create()
 
+            // Pre-bind ServerSocket in background so receiver connects instantly upon scanning QR
+            val selected = fileAdapter.getItems()
+            if (selected.isNotEmpty() && !isBatchStarted) {
+                isBatchStarted = true
+                TransferService.startSendingBatch(
+                    context = this,
+                    fileUris = selected.map { it.uri },
+                    host = state.hostIp,
+                    port = state.port,
+                    isGroupOwner = true
+                )
+            }
+
             btnClose.setOnClickListener {
+                isBatchStarted = false
+                isTransferStarting = false
                 activeQrDialog?.dismiss()
+                TransferService.cancelTransfer(this@SendActivity)
                 wifiDirectManager.disconnectAndRemoveGroup()
+            }
+
+            activeQrDialog?.setOnDismissListener {
+                if (!isTransferStarting) {
+                    isBatchStarted = false
+                    TransferService.cancelTransfer(this@SendActivity)
+                    wifiDirectManager.disconnectAndRemoveGroup()
+                }
             }
 
             if (!isFinishing && !isDestroyed) {
                 activeQrDialog?.show()
             }
         } catch (e: Exception) {
+            Log.e("SendActivity", "Error showing QR dialog: ${e.message}", e)
             Toast.makeText(this, "Could not show QR code: ${e.message}", Toast.LENGTH_SHORT).show()
         }
     }
@@ -488,15 +606,26 @@ class SendActivity : AppCompatActivity() {
         val selected = fileAdapter.getItems()
         if (selected.isEmpty()) return
 
-        val fileUris = selected.map { it.uri }
-        TransferService.startSendingBatch(
-            context = this,
-            fileUris = fileUris,
-            host = targetHost,
-            port = 8888,
-            isGroupOwner = isGroupOwner
-        )
+        isTransferStarting = true
+        activeQrDialog?.dismiss()
 
+        if (!isBatchStarted) {
+            isBatchStarted = true
+            val fileUris = selected.map { it.uri }
+            TransferService.startSendingBatch(
+                context = this,
+                fileUris = fileUris,
+                host = targetHost,
+                port = 8888,
+                isGroupOwner = isGroupOwner
+            )
+        }
+
+        navigateToTransferActivity()
+    }
+
+    private fun navigateToTransferActivity() {
+        val selected = fileAdapter.getItems()
         val intent = Intent(this, TransferActivity::class.java).apply {
             putExtra(TransferActivity.EXTRA_IS_SENDER, true)
             putExtra(
@@ -561,17 +690,29 @@ class SendActivity : AppCompatActivity() {
         return SelectedFileItem(uri, name, size, mimeType)
     }
 
-    private fun showLoadingDialog(message: String) {
-        loadingDialog?.dismiss()
-        loadingDialog = AlertDialog.Builder(this)
+    private fun showLoadingDialog(message: String, onCancel: (() -> Unit)? = null) {
+        hideLoadingDialog()
+        val builder = MaterialAlertDialogBuilder(this)
             .setMessage(message)
-            .setCancelable(false)
-            .create()
+            .setCancelable(onCancel != null)
+        if (onCancel != null) {
+            builder.setNegativeButton("Cancel") { _, _ ->
+                onCancel.invoke()
+                hideLoadingDialog()
+            }
+            builder.setOnCancelListener {
+                onCancel.invoke()
+                hideLoadingDialog()
+            }
+        }
+        loadingDialog = builder.create()
         loadingDialog?.show()
     }
 
     private fun hideLoadingDialog() {
-        loadingDialog?.dismiss()
+        try {
+            loadingDialog?.dismiss()
+        } catch (_: Exception) {}
         loadingDialog = null
     }
 }
