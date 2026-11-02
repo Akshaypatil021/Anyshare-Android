@@ -104,10 +104,10 @@ class FileReceiver(
                 // Receiver is Client: connect to GO at targetHost:listenPort with up to 25 retries
                 Log.d(TAG, "Receiver is Client. Connecting to sender GO at $targetHost:$listenPort...")
 
-                // Poll for P2P local IP assignment
+                // Poll for P2P local IP assignment (up to 8 seconds for slower phones like Honor 8)
                 var localP2pIp = P2pSocketHelper.findLocalP2pAddress()
                 var dhcpTries = 0
-                while (localP2pIp == null && dhcpTries < 8 && !isCancelled) {
+                while (localP2pIp == null && dhcpTries < 16 && !isCancelled) {
                     Thread.sleep(500)
                     localP2pIp = P2pSocketHelper.findLocalP2pAddress()
                     dhcpTries++
@@ -116,7 +116,7 @@ class FileReceiver(
                 var connectedSocket: Socket? = null
                 var lastErr: Exception? = null
 
-                for (attempt in 1..25) {
+                for (attempt in 1..30) {
                     if (isCancelled) break
                     var attemptSocket: Socket? = null
                     try {
@@ -129,7 +129,7 @@ class FileReceiver(
                                 speedBytesPerSec = 0.0,
                                 speedFormatted = "-- MB/s",
                                 etaSeconds = 0L,
-                                etaFormatted = "Attempt $attempt/25",
+                                etaFormatted = "Attempt $attempt/30",
                                 status = TransferStatus.Connecting
                             )
                         )
@@ -152,7 +152,7 @@ class FileReceiver(
                             } catch (_: Exception) {}
                         }
 
-                        Log.d(TAG, "Connecting to sender (attempt $attempt/25)...")
+                        Log.d(TAG, "Connecting to sender (attempt $attempt/30)...")
                         s.connect(InetSocketAddress(targetHost, listenPort), 3_000)
                         connectedSocket = s
                         Log.d(TAG, "Connected to sender on attempt $attempt!")
@@ -167,7 +167,7 @@ class FileReceiver(
                         }
                     }
                 }
-                clientSocket = connectedSocket ?: throw (lastErr ?: IOException("Failed to connect to sender at $targetHost:$listenPort after 25 attempts"))
+                clientSocket = connectedSocket ?: throw (lastErr ?: IOException("Failed to connect to sender at $targetHost:$listenPort after 30 attempts"))
             }
             currentClientSocket = clientSocket
 

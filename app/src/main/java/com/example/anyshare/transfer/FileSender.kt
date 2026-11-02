@@ -116,10 +116,10 @@ class FileSender(
                 // Sender is Client: connect to GO at targetHost:targetPort with DHCP stabilization
                 Log.d(TAG, "Sender is Client. Connecting to receiver at $targetHost:$targetPort...")
 
-                // Step 2a: Poll for P2P local IP assignment (up to 4s) so DHCP IP is valid
+                // Step 2a: Poll for P2P local IP assignment (up to 8s) so DHCP IP is valid
                 var localP2pIp = P2pSocketHelper.findLocalP2pAddress()
                 var dhcpTries = 0
-                while (localP2pIp == null && dhcpTries < 8 && !isCancelled) {
+                while (localP2pIp == null && dhcpTries < 16 && !isCancelled) {
                     Thread.sleep(500)
                     localP2pIp = P2pSocketHelper.findLocalP2pAddress()
                     dhcpTries++
@@ -129,13 +129,13 @@ class FileSender(
                 var connectedSocket: Socket? = null
                 var lastErr: Exception? = null
 
-                for (attempt in 1..25) {
+                for (attempt in 1..30) {
                     if (isCancelled) break
                     var attemptSocket: Socket? = null
                     try {
                         onProgress(
                             metricsCalculator.update(0L, TransferStatus.Connecting).copy(
-                                etaFormatted = "Attempt $attempt/25"
+                                etaFormatted = "Attempt $attempt/30"
                             )
                         )
 
@@ -158,7 +158,7 @@ class FileSender(
                             } catch (_: Exception) {}
                         }
 
-                        Log.d(TAG, "Connection attempt $attempt/25 to $targetHost:$targetPort...")
+                        Log.d(TAG, "Connection attempt $attempt/30 to $targetHost:$targetPort...")
                         s.connect(InetSocketAddress(targetHost, targetPort), 3_000)
                         connectedSocket = s
                         Log.d(TAG, "Successfully connected to $targetHost:$targetPort on attempt $attempt!")
@@ -174,7 +174,7 @@ class FileSender(
                         }
                     }
                 }
-                socket = connectedSocket ?: throw (lastErr ?: IOException("Failed to connect to receiver at $targetHost:$targetPort after 25 attempts"))
+                socket = connectedSocket ?: throw (lastErr ?: IOException("Failed to connect to receiver at $targetHost:$targetPort after 30 attempts"))
             }
             currentSocket = socket
 

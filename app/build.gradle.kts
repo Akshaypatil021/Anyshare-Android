@@ -59,6 +59,7 @@ dependencies {
     implementation(libs.zxing.embedded)
 
     testImplementation(libs.junit)
+    testImplementation("org.json:json:20231013")
     androidTestImplementation(libs.espresso.core)
     androidTestImplementation(libs.ext.junit)
 }

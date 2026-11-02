@@ -37,14 +37,18 @@ object P2pSocketHelper {
                     }
                 }
             }
-            // Pass 2: Look for any interface named p2p / wlan
+            // Pass 2: Look for any interface named p2p / wlan / swlan
             for (intf in interfaces) {
-                if (intf.name.contains("p2p", ignoreCase = true)) {
+                val name = intf.name.lowercase()
+                if (name.contains("p2p") || name.contains("wlan") || name.contains("swlan")) {
                     val addrs = try { java.util.Collections.list(intf.inetAddresses) } catch (_: Exception) { emptyList() }
                     for (addr in addrs) {
                         if (!addr.isLoopbackAddress && addr is Inet4Address) {
-                            Log.d(TAG, "Found local P2P fallback IP: ${addr.hostAddress} on interface ${intf.name}")
-                            return addr
+                            val ip = addr.hostAddress ?: ""
+                            if (!ip.startsWith("127.") && !ip.startsWith("169.254.")) {
+                                Log.d(TAG, "Found local P2P fallback IP: $ip on interface ${intf.name}")
+                                return addr
+                            }
                         }
                     }
                 }

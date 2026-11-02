@@ -30,7 +30,7 @@ class TransferMetricsTest {
     @Test
     fun testSpeedFormatting() {
         assertEquals("-- MB/s", TransferMetricsCalculator.formatSpeed(0.0))
-        assertEquals("500 KB/s", TransferMetricsCalculator.formatSpeed(500.0 * 1024))
+        assertEquals("500.0 KB/s", TransferMetricsCalculator.formatSpeed(500.0 * 1024))
         assertEquals("52.4 MB/s", TransferMetricsCalculator.formatSpeed(52.4 * 1024 * 1024))
     }
 
