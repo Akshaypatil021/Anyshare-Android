@@ -3,6 +3,7 @@ package com.example.anyshare.p2p
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.IntentFilter
+import android.net.MacAddress
 import android.net.NetworkInfo
 import android.net.wifi.WpsInfo
 import android.net.wifi.p2p.WifiP2pConfig
@@ -11,6 +12,8 @@ import android.net.wifi.p2p.WifiP2pGroup
 import android.net.wifi.p2p.WifiP2pInfo
 import android.net.wifi.p2p.WifiP2pManager
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -60,6 +63,59 @@ class WifiDirectManager(private val context: Context) : WifiDirectBroadcastRecei
 
     private var currentSecurityToken: String = ""
     private var currentPinCode: String = ""
+    private var activeGeneratedSsid: String? = null
+    private var activeGeneratedPassphrase: String? = null
+
+    private var groupOwnerPollHandler: Handler? = null
+    private var groupOwnerPollRunnable: Runnable? = null
+
+    @SuppressLint("MissingPermission")
+    private fun startGroupOwnerClientCheck() {
+        stopGroupOwnerClientCheck()
+        val handler = Handler(Looper.getMainLooper())
+        groupOwnerPollHandler = handler
+        var pollCount = 0
+        val runnable = object : Runnable {
+            override fun run() {
+                val p2p = manager
+                val ch = channel
+                if (p2p != null && ch != null && _connectionState.value is P2pConnectionState.GroupOwnerReady) {
+                    try {
+                        p2p.requestGroupInfo(ch) { group ->
+                            if (group != null && group.clientList.isNotEmpty()) {
+                                Log.d(TAG, "Polling detected connected client(s): count=${group.clientList.size}")
+                                stopGroupOwnerClientCheck()
+                                val info = _connectionInfo.value
+                                val hostIp = info?.groupOwnerAddress?.hostAddress ?: DEFAULT_GROUP_OWNER_IP
+                                _activeGroup.value = group
+                                _connectionState.value = P2pConnectionState.ConnectedAsGroupOwner(
+                                    hostAddress = hostIp,
+                                    port = DEFAULT_TRANSFER_PORT,
+                                    connectionInfo = info ?: WifiP2pInfo(),
+                                    group = group
+                                )
+                                return@requestGroupInfo
+                            }
+                        }
+                    } catch (e: Exception) {
+                        Log.w(TAG, "Polling requestGroupInfo error: ${e.message}")
+                    }
+                    pollCount++
+                    if (pollCount < 60) {
+                        handler.postDelayed(this, 1200)
+                    }
+                }
+            }
+        }
+        groupOwnerPollRunnable = runnable
+        handler.postDelayed(runnable, 1200)
+    }
+
+    private fun stopGroupOwnerClientCheck() {
+        groupOwnerPollRunnable?.let { groupOwnerPollHandler?.removeCallbacks(it) }
+        groupOwnerPollRunnable = null
+        groupOwnerPollHandler = null
+    }
 
     init {
         initializeChannel()
@@ -151,42 +207,53 @@ class WifiDirectManager(private val context: Context) : WifiDirectBroadcastRecei
         port: Int,
         onResult: (Boolean, String?) -> Unit
     ) {
+        val rand = (1000..9999).random()
+        val genSsid = "DIRECT-AS-$rand"
+        val genPass = "anyshare$rand"
+        activeGeneratedSsid = genSsid
+        activeGeneratedPassphrase = genPass
+
         try {
             val groupListener = object : WifiP2pManager.ActionListener {
                 override fun onSuccess() {
-                    Log.d(TAG, "Autonomous P2P Group created successfully.")
-                    p2p.requestGroupInfo(ch) { group ->
-                        _activeGroup.value = group
-                        p2p.requestConnectionInfo(ch) { info ->
-                            _connectionInfo.value = info
-                            val hostIp = info?.groupOwnerAddress?.hostAddress ?: DEFAULT_GROUP_OWNER_IP
-                            val ssid = group?.networkName ?: "DIRECT-Anyshare"
-                            val passphrase = try {
-                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                                    group?.passphrase ?: ""
-                                } else {
-                                    val field = group?.javaClass?.getDeclaredField("mPassphrase")
-                                    field?.isAccessible = true
-                                    (field?.get(group) as? String) ?: ""
+                    Log.d(TAG, "Autonomous P2P Group created successfully. Waiting for framework to settle...")
+                    android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                        p2p.requestGroupInfo(ch) { group ->
+                            _activeGroup.value = group
+                            p2p.requestConnectionInfo(ch) { info ->
+                                _connectionInfo.value = info
+                                val hostIp = info?.groupOwnerAddress?.hostAddress ?: DEFAULT_GROUP_OWNER_IP
+                                val ssid = group?.networkName?.takeIf { it.isNotEmpty() } ?: activeGeneratedSsid ?: "DIRECT-AS-Anyshare"
+                                val extractedPass = try {
+                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                                        group?.passphrase?.takeIf { it.isNotEmpty() }
+                                    } else {
+                                        val field = group?.javaClass?.getDeclaredField("mPassphrase")
+                                        field?.isAccessible = true
+                                        (field?.get(group) as? String)?.takeIf { it.isNotEmpty() }
+                                    }
+                                } catch (_: Exception) {
+                                    null
                                 }
-                            } catch (_: Exception) {
-                                ""
-                            }
 
-                            val readyState = P2pConnectionState.GroupOwnerReady(
-                                groupInfo = group ?: WifiP2pGroup(),
-                                connectionInfo = info ?: WifiP2pInfo(),
-                                hostIp = hostIp,
-                                port = port,
-                                ssid = ssid,
-                                passphrase = passphrase,
-                                pinCode = currentPinCode,
-                                securityToken = currentSecurityToken
-                            )
-                            _connectionState.value = readyState
-                            onResult(true, null)
+                                val finalPass = extractedPass ?: activeGeneratedPassphrase ?: "anyshare1234"
+
+                                val readyState = P2pConnectionState.GroupOwnerReady(
+                                    groupInfo = group ?: WifiP2pGroup(),
+                                    connectionInfo = info ?: WifiP2pInfo(),
+                                    hostIp = hostIp,
+                                    port = port,
+                                    ssid = ssid,
+                                    passphrase = finalPass,
+                                    pinCode = currentPinCode,
+                                    securityToken = currentSecurityToken
+                                )
+                                _connectionState.value = readyState
+                                startGroupOwnerClientCheck()
+                                onResult(true, null)
+                            }
                         }
-                    }
+                    }, 250)
                 }
 
                 override fun onFailure(reason: Int) {
@@ -206,35 +273,30 @@ class WifiDirectManager(private val context: Context) : WifiDirectBroadcastRecei
                 }
             }
 
-            // Dynamic band selection: AUTO allows Android to negotiate 5GHz if both phones support it, or 2.4GHz if either phone is older
+            // Dynamic band selection: use Builder on Android 10+ for guaranteed SSID and Passphrase
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 val prefBand = deviceConfigManager.getWifiBandPreference()
-                if (prefBand == com.example.anyshare.utils.DeviceConfigManager.BAND_5GHZ ||
-                    prefBand == com.example.anyshare.utils.DeviceConfigManager.BAND_2GHZ
-                ) {
-                    val targetBand = if (prefBand == com.example.anyshare.utils.DeviceConfigManager.BAND_5GHZ) {
-                        WifiP2pConfig.GROUP_OWNER_BAND_5GHZ
-                    } else {
-                        WifiP2pConfig.GROUP_OWNER_BAND_2GHZ
-                    }
-                    try {
-                        val rand = (1000..9999).random()
-                        val config = WifiP2pConfig.Builder()
-                            .setNetworkName("DIRECT-AS-$rand")
-                            .setPassphrase("anyshare$rand")
-                            .setGroupOperatingBand(targetBand)
-                            .build()
-                        Log.d(TAG, "Creating P2P Group with forced band $targetBand (SSID: DIRECT-AS-$rand)")
-                        p2p.createGroup(ch, config, groupListener)
-                        return
-                    } catch (e: Exception) {
-                        Log.w(TAG, "Forced band createGroup failed, falling back to standard createGroup: ${e.message}")
-                    }
+                val targetBand = when (prefBand) {
+                    com.example.anyshare.utils.DeviceConfigManager.BAND_5GHZ -> WifiP2pConfig.GROUP_OWNER_BAND_5GHZ
+                    com.example.anyshare.utils.DeviceConfigManager.BAND_2GHZ -> WifiP2pConfig.GROUP_OWNER_BAND_2GHZ
+                    else -> WifiP2pConfig.GROUP_OWNER_BAND_AUTO
+                }
+                try {
+                    val config = WifiP2pConfig.Builder()
+                        .setNetworkName(genSsid)
+                        .setPassphrase(genPass)
+                        .setGroupOperatingBand(targetBand)
+                        .build()
+                    Log.d(TAG, "Creating P2P Group with Builder: $genSsid (pass=$genPass, band=$targetBand)")
+                    p2p.createGroup(ch, config, groupListener)
+                    return
+                } catch (e: Exception) {
+                    Log.w(TAG, "Builder createGroup fallback to standard: ${e.message}")
                 }
             }
 
-            // Standard autonomous group creation for AUTO mode and all fallbacks
-            Log.d(TAG, "Creating standard autonomous P2P group (Auto Band)")
+            // Standard autonomous group creation for older Android or fallback
+            Log.d(TAG, "Creating standard autonomous P2P group")
             p2p.createGroup(ch, groupListener)
         } catch (e: Exception) {
             Log.e(TAG, "Exception in proceedGroupCreation: ${e.message}")
@@ -289,9 +351,11 @@ class WifiDirectManager(private val context: Context) : WifiDirectBroadcastRecei
     @SuppressLint("MissingPermission")
     fun stopDiscovery() {
         if (_connectionState.value is P2pConnectionState.ConnectedAsGroupOwner ||
-            _connectionState.value is P2pConnectionState.ConnectedAsClient
+            _connectionState.value is P2pConnectionState.ConnectedAsClient ||
+            _connectionState.value is P2pConnectionState.Connecting ||
+            _connectionState.value is P2pConnectionState.GroupOwnerReady
         ) {
-            Log.d(TAG, "Skipping stopDiscovery because P2P group is active.")
+            Log.d(TAG, "Skipping stopDiscovery because P2P group or connection is active.")
             return
         }
         manager?.stopPeerDiscovery(channel, null)
@@ -302,6 +366,11 @@ class WifiDirectManager(private val context: Context) : WifiDirectBroadcastRecei
      * Stops peer discovery asynchronously and waits for the radio to enter idle state
      * before issuing connect, preventing framework ERROR (0) internal errors.
      */
+    /**
+     * Connect to a specific peer as a Client.
+     * Initiates connection directly without clearing or stopping peer discovery,
+     * preserving the system wpa_supplicant routing table and preventing framework ERROR (0).
+     */
     @SuppressLint("MissingPermission")
     fun connectToDevice(
         deviceAddress: String,
@@ -311,27 +380,7 @@ class WifiDirectManager(private val context: Context) : WifiDirectBroadcastRecei
         val ch = channel ?: return onResult(false, "Channel uninitialized")
 
         _connectionState.value = P2pConnectionState.Connecting(deviceAddress)
-
-        // Cancel any stale connection attempts first
-        p2p.cancelConnect(ch, null)
-
-        // Asynchronously stop peer discovery before connecting
-        p2p.stopPeerDiscovery(ch, object : WifiP2pManager.ActionListener {
-            override fun onSuccess() {
-                Log.d(TAG, "Discovery stopped cleanly before connecting.")
-                // Give the Wi-Fi radio 200ms to settle into idle state before initiating connect
-                android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-                    executeConnect(p2p, ch, deviceAddress, onResult)
-                }, 200)
-            }
-
-            override fun onFailure(reason: Int) {
-                Log.d(TAG, "stopPeerDiscovery returned reason $reason, proceeding to connect in 200ms.")
-                android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-                    executeConnect(p2p, ch, deviceAddress, onResult)
-                }, 200)
-            }
-        })
+        executeConnect(p2p, ch, deviceAddress, onResult)
     }
 
     @SuppressLint("MissingPermission")
@@ -341,17 +390,32 @@ class WifiDirectManager(private val context: Context) : WifiDirectBroadcastRecei
         deviceAddress: String,
         onResult: (success: Boolean, errorMessage: String?) -> Unit
     ) {
-        val config = WifiP2pConfig().apply {
-            this.deviceAddress = deviceAddress
-            wps.setup = WpsInfo.PBC
-            // Default groupOwnerIntent (-1) lets Android negotiate GO/Client role based on device capabilities
-            groupOwnerIntent = -1
+        val config: WifiP2pConfig = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            try {
+                WifiP2pConfig.Builder()
+                    .setDeviceAddress(MacAddress.fromString(deviceAddress))
+                    .setGroupOperatingBand(WifiP2pConfig.GROUP_OWNER_BAND_AUTO)
+                    .build()
+            } catch (e: Throwable) {
+                WifiP2pConfig().apply {
+                    this.deviceAddress = deviceAddress
+                    wps.setup = WpsInfo.PBC
+                    groupOwnerIntent = 14
+                }
+            }
+        } else {
+            WifiP2pConfig().apply {
+                this.deviceAddress = deviceAddress
+                wps.setup = WpsInfo.PBC
+                groupOwnerIntent = 14
+            }
         }
 
         try {
+            Log.d(TAG, "Initiating direct p2p.connect to $deviceAddress")
             p2p.connect(ch, config, object : WifiP2pManager.ActionListener {
                 override fun onSuccess() {
-                    Log.d(TAG, "Connecting to $deviceAddress initiated.")
+                    Log.d(TAG, "Connecting to $deviceAddress initiated successfully.")
                     onResult(true, null)
                 }
 
@@ -359,14 +423,18 @@ class WifiDirectManager(private val context: Context) : WifiDirectBroadcastRecei
                     val msg = P2pErrorHelper.getErrorMessage(reason)
                     Log.w(TAG, "Connect to $deviceAddress failed: $msg (reason $reason)")
 
-                    // If framework is BUSY (2) or reports internal ERROR (0) on initial attempt due to radio settling,
-                    // cancel connect and retry once after 600ms.
+                    // If framework is BUSY (2) or reports internal ERROR (0) on initial attempt,
+                    // retry once after 500ms with standard fallback config and default intent
                     if (reason == WifiP2pManager.BUSY || reason == WifiP2pManager.ERROR) {
-                        Log.d(TAG, "Transient connect error ($reason), retrying once after 600ms...")
-                        p2p.cancelConnect(ch, null)
-                        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                        Log.d(TAG, "Transient connect error ($reason), retrying once after 500ms with default intent...")
+                        Handler(Looper.getMainLooper()).postDelayed({
                             try {
-                                p2p.connect(ch, config, object : WifiP2pManager.ActionListener {
+                                val retryConfig = WifiP2pConfig().apply {
+                                    this.deviceAddress = deviceAddress
+                                    wps.setup = WpsInfo.PBC
+                                    groupOwnerIntent = -1
+                                }
+                                p2p.connect(ch, retryConfig, object : WifiP2pManager.ActionListener {
                                     override fun onSuccess() {
                                         Log.d(TAG, "Connect to $deviceAddress succeeded on retry.")
                                         onResult(true, null)
@@ -382,7 +450,7 @@ class WifiDirectManager(private val context: Context) : WifiDirectBroadcastRecei
                             } catch (e: Exception) {
                                 onResult(false, e.message)
                             }
-                        }, 600)
+                        }, 500)
                         return
                     }
 
@@ -398,10 +466,51 @@ class WifiDirectManager(private val context: Context) : WifiDirectBroadcastRecei
     }
 
     /**
+     * Cancel any active connect attempts.
+     */
+    @SuppressLint("MissingPermission")
+    fun cancelConnect(listener: WifiP2pManager.ActionListener? = null) {
+        manager?.cancelConnect(channel, listener)
+    }
+
+    /**
+     * Cancels any pending or stale invitation first, waits briefly for wpa_supplicant to reset,
+     * and then initiates a clean connection to the target device.
+     */
+    @SuppressLint("MissingPermission")
+    fun reconnectCleanly(
+        deviceAddress: String,
+        onResult: (success: Boolean, errorMessage: String?) -> Unit
+    ) {
+        val p2p = manager ?: return onResult(false, "WifiP2pManager unavailable")
+        val ch = channel ?: return onResult(false, "Channel uninitialized")
+
+        Log.d(TAG, "reconnectCleanly: cancelling existing invitation/connection before connecting to $deviceAddress")
+        p2p.cancelConnect(ch, object : WifiP2pManager.ActionListener {
+            override fun onSuccess() {
+                Log.d(TAG, "cancelConnect succeeded, proceeding to connect in 250ms...")
+                Handler(Looper.getMainLooper()).postDelayed({
+                    connectToDevice(deviceAddress, onResult)
+                }, 250)
+            }
+
+            override fun onFailure(reason: Int) {
+                Log.w(TAG, "cancelConnect failed ($reason), attempting connect directly...")
+                Handler(Looper.getMainLooper()).postDelayed({
+                    connectToDevice(deviceAddress, onResult)
+                }, 200)
+            }
+        })
+    }
+
+    /**
      * Disconnect and release the P2P group and channel.
      */
     @SuppressLint("MissingPermission")
     fun disconnectAndRemoveGroup(onComplete: (() -> Unit)? = null) {
+        activeGeneratedSsid = null
+        activeGeneratedPassphrase = null
+        stopGroupOwnerClientCheck()
         stopDiscovery()
         manager?.cancelConnect(channel, null)
         manager?.removeGroup(channel, object : WifiP2pManager.ActionListener {
@@ -457,33 +566,67 @@ class WifiDirectManager(private val context: Context) : WifiDirectBroadcastRecei
             if (info.groupFormed) {
                 val hostIp = info.groupOwnerAddress?.hostAddress ?: DEFAULT_GROUP_OWNER_IP
                 if (info.isGroupOwner) {
-                    Log.d(TAG, "Connected as Group Owner (IP: $hostIp)")
-                    _connectionState.value = P2pConnectionState.ConnectedAsGroupOwner(
-                        hostAddress = hostIp,
-                        port = DEFAULT_TRANSFER_PORT,
-                        connectionInfo = info,
-                        group = _activeGroup.value
-                    )
+                    p2p.requestGroupInfo(ch) { group ->
+                        _activeGroup.value = group
+                        val clients = group?.clientList ?: emptyList()
+                        Log.d(TAG, "GroupOwner status: clients count = ${clients.size}")
+                        if (clients.isNotEmpty()) {
+                            Log.d(TAG, "Connected as Group Owner with client(s): count=${clients.size}")
+                            stopGroupOwnerClientCheck()
+                            _connectionState.value = P2pConnectionState.ConnectedAsGroupOwner(
+                                hostAddress = hostIp,
+                                port = DEFAULT_TRANSFER_PORT,
+                                connectionInfo = info,
+                                group = group
+                            )
+                        } else {
+                            Log.d(TAG, "Group formed as Group Owner, waiting for clients to connect...")
+                            startGroupOwnerClientCheck()
+                            if (_connectionState.value !is P2pConnectionState.GroupOwnerReady) {
+                                val ssid = group?.networkName?.takeIf { it.isNotEmpty() } ?: activeGeneratedSsid ?: "DIRECT-AS-Anyshare"
+                                val extractedPass = try {
+                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                                        group?.passphrase?.takeIf { it.isNotEmpty() }
+                                    } else {
+                                        val field = group?.javaClass?.getDeclaredField("mPassphrase")
+                                        field?.isAccessible = true
+                                        (field?.get(group) as? String)?.takeIf { it.isNotEmpty() }
+                                    }
+                                } catch (_: Exception) { null }
+                                val finalPass = extractedPass ?: activeGeneratedPassphrase ?: "anyshare1234"
+                                _connectionState.value = P2pConnectionState.GroupOwnerReady(
+                                    groupInfo = group ?: WifiP2pGroup(),
+                                    connectionInfo = info,
+                                    hostIp = hostIp,
+                                    port = DEFAULT_TRANSFER_PORT,
+                                    ssid = ssid,
+                                    passphrase = finalPass,
+                                    pinCode = currentPinCode,
+                                    securityToken = currentSecurityToken
+                                )
+                            }
+                        }
+                    }
                 } else {
+                    stopGroupOwnerClientCheck()
                     Log.d(TAG, "Connected as Client to Group Owner: $hostIp")
                     _connectionState.value = P2pConnectionState.ConnectedAsClient(
                         groupOwnerAddress = hostIp,
                         port = DEFAULT_TRANSFER_PORT,
                         connectionInfo = info
                     )
-                }
-
-                // Asynchronously query group info without blocking socket connection readiness
-                try {
-                    p2p.requestGroupInfo(ch) { group ->
-                        _activeGroup.value = group
+                    try {
+                        p2p.requestGroupInfo(ch) { group ->
+                            _activeGroup.value = group
+                        }
+                    } catch (e: Exception) {
+                        Log.w(TAG, "requestGroupInfo non-critical exception: ${e.message}")
                     }
-                } catch (e: Exception) {
-                    Log.w(TAG, "requestGroupInfo non-critical exception: ${e.message}")
                 }
             } else {
-                // If group is not formed and network reports disconnected, revert to Idle
-                if (networkInfo?.isConnected == false) {
+                stopGroupOwnerClientCheck()
+                // If group is not formed and network reports disconnected, revert to Idle (unless actively connecting)
+                if (networkInfo?.isConnected == false && _connectionState.value !is P2pConnectionState.Connecting) {
                     Log.d(TAG, "Group not formed and network disconnected -> Idle")
                     _connectionState.value = P2pConnectionState.Idle
                     _activeGroup.value = null
