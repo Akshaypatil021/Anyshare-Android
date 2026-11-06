@@ -12,7 +12,8 @@ import java.util.Locale
 
 class HistoryAdapter(
     private var items: List<HistoryItem>,
-    private val onItemClick: (HistoryItem) -> Unit
+    private val onItemClick: (HistoryItem) -> Unit,
+    private val onItemDelete: ((HistoryItem) -> Unit)? = null
 ) : RecyclerView.Adapter<HistoryAdapter.HistoryViewHolder>() {
 
     fun updateList(newList: List<HistoryItem>) {
@@ -47,6 +48,10 @@ class HistoryAdapter(
 
             binding.root.setOnClickListener {
                 onItemClick(item)
+            }
+
+            binding.btnDeleteItem.setOnClickListener {
+                onItemDelete?.invoke(item)
             }
         }
 

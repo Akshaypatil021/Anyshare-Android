@@ -89,6 +89,17 @@
             android:textSize="11sp"
             android:textStyle="bold" />
 
+        <!-- Delete Single Record Button -->
+        <ImageButton
+            android:id="@+id/btnDeleteItem"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:layout_marginStart="8dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Delete record"
+            android:src="@drawable/ic_delete"
+            app:tint="?android:textColorSecondary" />
+
     </LinearLayout>
 
 </com.google.android.material.card.MaterialCardView>
