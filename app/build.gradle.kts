@@ -1,5 +1,6 @@
 plugins {
     alias(libs.plugins.android.application)
+    alias(libs.plugins.ksp)
 }
 
 android {
@@ -34,6 +35,10 @@ android {
     }
 }
 
+ksp {
+    arg("room.generateKotlin", "true")
+}
+
 dependencies {
     implementation(libs.activity.ktx)
     implementation(libs.appcompat)
@@ -57,6 +62,11 @@ dependencies {
     // ZXing (QR generation & scanning)
     implementation(libs.zxing.core)
     implementation(libs.zxing.embedded)
+
+    // Room Database
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room.ktx)
+    ksp(libs.androidx.room.compiler)
 
     testImplementation(libs.junit)
     testImplementation("org.json:json:20231013")
